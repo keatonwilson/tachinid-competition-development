@@ -91,6 +91,13 @@ ggplot(tach_master_impute, aes(x = log(FlyWeight), y = log(HeadWeight), color = 
   
 #No difference between males and females
 lmhvb = lm(log(HeadWeight) ~ log(FlyWeight), data = tach_master_impute)
+summary(lmhvb)
+confint(lmhvb)
+#Let's do a Wald's test to check and see if the slope is sig. diff from 1
+library(car)
+linearHypothesis(lmhvb, "log(FlyWeight) = 1")
+
+#Slope is significantly less than 1. 
 
 
 #Thorax versus Body  
@@ -104,7 +111,12 @@ ggplot(tach_master_impute, aes(x = log(FlyWeight), y = log(ThoraxWeight), color 
   ylab("log10 Thorax Weight (mg)")
 
 #Differences between males and females
-lmtvbvs = lm(log(ThoraxWeight) ~ log(FlyWeight) + Sex, data = tach_master_impute)
+lmtvbvs = lm(log(ThoraxWeight) ~ Sex/log(FlyWeight) -1, data = tach_master_impute)
+summary(lmtvbvs)
+#Testing differences from a slope of 1
+linearHypothesis(lmtvbvs, "SexF:log(FlyWeight) = 1")
+linearHypothesis(lmtvbvs, "SexM:log(FlyWeight) = 1")
+
 
 #Yep, Males are significantly higher, no difference in slope though.
 
