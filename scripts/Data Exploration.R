@@ -45,7 +45,7 @@ ggplot(tach_master_impute, aes(x = sib_number, y = FlyWeight, color = Sex)) +
   geom_jitter(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "lm", aes(group = 1)) +
-  xlab("Number of Siblings") +
+  xlab("Cohort Size") +
   ylab("Fly Weight (mg)")
 
 #Fly weight as a function of head capsule size
