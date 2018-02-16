@@ -29,7 +29,7 @@ tach_master = tach_master %>%
 
 #Let's impute NA values. 
 library(caret)
-install.packages("VIM")
+#install.packages("VIM")
 library(VIM)
 
 
@@ -161,12 +161,12 @@ ggplot(tach_master_impute, aes(x = log(FlyWeight), y = log(as.numeric(LegsWeight
 
 
 #Can we do them all on one plot!?
-ggplot(tach_master_impute, aes(x = log(FlyWeight), y = log(HeadWeight), color = Sex)) +
+ggplot(tach_master_impute, aes(x = log(FlyWeight), y = log(HeadWeight), shape = Sex)) +
   geom_point(size = 2, alpha = 0.5) +
   geom_smooth(method = "lm", se = FALSE, aes(group = 1), color = "black") +
-  geom_point(aes(x = log(FlyWeight), y = log(ThoraxWeight)), size = 2, alpha = 0.5, shape = 17) +
+  geom_point(aes(x = log(FlyWeight), y = log(ThoraxWeight)), size = 2, alpha = 0.5) +
     geom_smooth(method = "lm", se = FALSE, aes(x = log(FlyWeight), y = log(ThoraxWeight))) +
-  geom_point(aes(x = log(FlyWeight), y = log(AbWeight)), size = 2, alpha = 0.5, shape = 18) +
+  geom_point(aes(x = log(FlyWeight), y = log(AbWeight)), size = 2, alpha = 0.5) +
     geom_smooth(method = "lm", se = FALSE, aes(x = log(FlyWeight), y = log(AbWeight))) +
   geom_point(aes(x = log(FlyWeight), y = log(WingWeight)), size = 2, alpha = 0.5, shape = 4) +
     geom_smooth(method = "lm", se = FALSE, color = "black", aes(group = 1, x = log(FlyWeight), y = log(WingWeight))) +
@@ -182,6 +182,32 @@ ggplot(tach_master_impute, aes(x = log(FlyWeight), y = log(HeadWeight), color = 
   geom_label(show.legend = FALSE, aes(x = 3, y = 0.5, label = "Head", size = 10), color = "black") +
   geom_label(show.legend = FALSE, aes(x = 3, y = 0.1, label = "Legs", size = 10), color = "black") +
   geom_label(show.legend = FALSE, aes(x = 3, y = -1.3, label = "Wings", size = 10), color = "black")
+
+
+#Better way to make the plot above - but with changes described by Robbie
+tach_master_impute
+tach_master_impute_long = tach_master_impute %>%
+  select(Sex, FlyWeight:LegsWeight) %>%
+  gather(key = "organ", value = "organ_weight", -Sex, -FlyWeight)
+tach_master_impute_long$organ = factor(tach_master_impute_long$organ)
+tach_master_impute_long$organ_weight = as.numeric(tach_master_impute_long$organ_weight)
+
+tach_master_impute_long %>%
+  filter(organ == "ThoraxWeight" | organ == "AbWeight") %>%
+ggplot(aes(x = log(FlyWeight), y = log(organ_weight), shape = Sex, color = organ)) +
+  geom_point(size = 2, alpha = 0.5) +
+  geom_smooth(method = "lm", aes(lty = Sex)) +
+  theme_classic() +
+  geom_abline(slope = 1, intercept = 0, lty = 3) +
+  coord_cartesian(xlim = c(0, 3), ylim = c(-3,3)) +
+  scale_color_discrete(guide = FALSE) +
+  scale_shape_discrete(labels = c("Female", "Male")) +
+  scale_linetype_discrete(guide = FALSE) +
+  geom_label(show.legend = FALSE, aes(x = 3, y = 2.2, label = "Thorax",
+                                      size = 9), color = "black") +
+  geom_label(show.legend = FALSE, aes(x = 3, y = 1.5, label = "Abdomen",
+                                      size = 9), color = "black")
+  
 
 #Didn't he do relative body part size plotted against size?
 
