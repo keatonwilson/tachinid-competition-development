@@ -187,11 +187,12 @@ ggplot(tach_master_impute, aes(x = log(FlyWeight), y = log(HeadWeight), shape = 
 #Better way to make the plot above - but with changes described by Robbie
 tach_master_impute
 tach_master_impute_long = tach_master_impute %>%
-  select(Sex, FlyWeight:LegsWeight) %>%
-  gather(key = "organ", value = "organ_weight", -Sex, -FlyWeight)
+  select(Sex, FlyWeight:WingIntact) %>%
+  gather(key = "organ", value = "organ_weight", -Sex, -FlyWeight, -WingIntact)
 tach_master_impute_long$organ = factor(tach_master_impute_long$organ)
 tach_master_impute_long$organ_weight = as.numeric(tach_master_impute_long$organ_weight)
 
+#The interesting body parts
 tach_master_impute_long %>%
   filter(organ == "ThoraxWeight" | organ == "AbWeight") %>%
 ggplot(aes(x = log(FlyWeight), y = log(organ_weight), shape = Sex, color = organ)) +
@@ -199,14 +200,37 @@ ggplot(aes(x = log(FlyWeight), y = log(organ_weight), shape = Sex, color = organ
   geom_smooth(method = "lm", aes(lty = Sex)) +
   theme_classic() +
   geom_abline(slope = 1, intercept = 0, lty = 3) +
-  coord_cartesian(xlim = c(0, 3), ylim = c(-3,3)) +
+  coord_cartesian(xlim = c(0.5, 3), ylim = c(-3,3)) +
   scale_color_discrete(guide = FALSE) +
   scale_shape_discrete(labels = c("Female", "Male")) +
   scale_linetype_discrete(guide = FALSE) +
-  geom_label(show.legend = FALSE, aes(x = 3, y = 2.2, label = "Thorax",
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 2.2, label = "Thorax",
                                       size = 9), color = "black") +
-  geom_label(show.legend = FALSE, aes(x = 3, y = 1.5, label = "Abdomen",
-                                      size = 9), color = "black")
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 1.5, label = "Abdomen",
+                                      size = 9), color = "black") +
+  ylab("log10 Weight (mg)") +
+  xlab("log10 Body Weight (mg)")
+
+#The rest
+tach_master_impute_long %>%
+  filter(organ %in% c("HeadWeight", "WingWeight", "LegsWeight")) %>%
+  ggplot(aes(x = log(FlyWeight), y = log(organ_weight), shape = Sex, color = organ)) +
+  geom_point(size = 2, alpha = 0.5) +
+  geom_smooth(method = "lm", aes(group = organ)) +
+  theme_classic() +
+  geom_abline(slope = 1, intercept = 0, lty = 3) +
+  coord_cartesian(xlim = c(0.5, 3), ylim = c(-3,3)) +
+  scale_color_discrete(guide = FALSE) +
+  scale_shape_discrete(labels = c("Female", "Male")) +
+  scale_linetype_discrete(guide = FALSE) +
+  ylab("log10 Weight (mg)") +
+  xlab("log10 Body Weight (mg)") +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 0.5, label = "Head", 
+                                      size = 10), color = "black") +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 0.1, label = "Legs", 
+                                      size = 10), color = "black") +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = -1.4, label = "Wings", 
+                                      size = 10), color = "black")
   
 
 #Didn't he do relative body part size plotted against size?
@@ -231,20 +255,16 @@ ggplot(tach_master_impute, aes(x = FlyWeight, y = AbWeight/FlyWeight, color = Se
 ggplot((tach_master_impute %>% filter(WingWeight/FlyWeight < 0.1)), aes(x = FlyWeight, y = WingWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "glm")
+  geom_smooth(method = "glm", aes(group = 1), color = "black")
 
 
 ggplot(tach_master_impute, aes(x = FlyWeight, y = as.numeric(LegsWeight)/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "glm")
+  geom_smooth(method = "glm", color = "black", aes(group = 1))
 
 
-#Comparing body parts
-ggplot(tach_master_impute, aes(x = ThoraxWeight/FlyWeight, y = AbWeight/FlyWeight, color = Sex)) +
-  geom_point(size = 3, alpha = 0.6) +
-  theme_classic() +
-  geom_smooth(method = "lm")
+
 
 
 
