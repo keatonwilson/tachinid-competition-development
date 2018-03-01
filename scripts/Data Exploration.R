@@ -246,7 +246,9 @@ ggsave(Fig.4, file = "./output/Fig.4.pdf", device = "pdf", width = 10, height = 
 Fig.5 = ggplot(tach_master_impute, aes(x = FlyWeight, y = HeadWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "glm", formula = y ~ poly(x, 2), aes(group = 1), color = "black")
+  geom_smooth(method = "glm", formula = y ~ poly(x, 2), aes(group = 1), color = "black") +
+  xlab("Fly weight (mg)") +
+  ylab("Head weight (mg) / Body weight (mg)")
 
 ggsave(Fig.5, file = "./output/Fig.5.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
@@ -254,7 +256,9 @@ ggsave(Fig.5, file = "./output/Fig.5.pdf", device = "pdf", width = 10, height = 
 Fig.6 = ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "glm", formula = y ~ poly(x, 2))
+  geom_smooth(method = "glm", formula = y ~ poly(x, 2)) +
+  xlab("Fly weight (mg)") +
+  ylab("Thorax weight (mg) / Body weight (mg)")
 
 ggsave(Fig.6, file = "./output/Fig.6.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
@@ -262,10 +266,29 @@ ggsave(Fig.6, file = "./output/Fig.6.pdf", device = "pdf", width = 10, height = 
 Fig.7 = ggplot(tach_master_impute, aes(x = FlyWeight, y = AbWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "glm")
+  geom_smooth(method = "glm") +
+  xlab("Fly weight (mg)") +
+  ylab("Abdomen weight (mg) / Body weight (mg)")
 
 ggsave(Fig.7, file = "./output/Fig.7.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
+Fig.8 = ggplot(tach_master_impute, aes(x = FlyWeight, y = WingWeight/FlyWeight, color = Sex)) +
+  geom_point(size = 3, alpha = 0.6) +
+  theme_classic() +
+  geom_smooth(method = "glm") +
+  xlab("Fly weight (mg)") +
+  ylab("Wings weight (mg) / Body weight (mg)")
+
+ggsave(Fig.8, file = "./output/Fig.8.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
+Fig.9 = ggplot(tach_master_impute, aes(x = FlyWeight, y = as.numeric(LegsWeight)/FlyWeight, color = Sex)) +
+  geom_point(size = 3, alpha = 0.6) +
+  theme_classic() +
+  geom_smooth(method = "glm") +
+  xlab("Fly weight (mg)") +
+  ylab("Legs weight (mg) / Body weight (mg)")
+
+ggsave(Fig.9, file = "./output/Fig.9.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
 
 #Seems like there might a wing-weight that is fucked up - outlier removed - should probably remove all data where the wing category is False
