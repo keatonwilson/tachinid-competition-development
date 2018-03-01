@@ -41,20 +41,24 @@ tach_master_impute$FlyWeight = as.numeric(tach_master_impute$FlyWeight)
 #Exploratory plots!
 
 #Fly weight as a function of sibling number
-ggplot(tach_master_impute, aes(x = sib_number, y = FlyWeight, color = Sex)) +
+Fig.1 = ggplot(tach_master_impute, aes(x = sib_number, y = FlyWeight, color = Sex)) +
   geom_jitter(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "lm", aes(group = 1)) +
   xlab("Cohort Size") +
   ylab("Fly Weight (mg)")
 
+ggsave(Fig.1, file = "./output/Fig.1.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
 #Fly weight as a function of head capsule size
-ggplot(tach_master_impute, aes(x = HeadCapsuleWidth, y = FlyWeight, color = Sex)) +
+Fig.2 = ggplot(tach_master_impute, aes(x = HeadCapsuleWidth, y = FlyWeight, color = Sex)) +
   geom_jitter(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "lm", aes(group = 1)) +
   xlab("Host head-capsule width (mm)") +
   ylab("Fly Weight (mg)")
+
+ggsave(Fig.2, file = "./output/Fig.2.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
 #best model seems to be one that includes both, additively.
 lm1 = lm(FlyWeight ~ sib_number + HeadCapsuleWidth, data = tach_master_impute)
@@ -193,7 +197,7 @@ tach_master_impute_long$organ = factor(tach_master_impute_long$organ)
 tach_master_impute_long$organ_weight = as.numeric(tach_master_impute_long$organ_weight)
 
 #The interesting body parts
-tach_master_impute_long %>%
+Fig.3 = tach_master_impute_long %>%
   filter(organ == "ThoraxWeight" | organ == "AbWeight") %>%
 ggplot(aes(x = log(FlyWeight), y = log(organ_weight), shape = Sex, color = organ)) +
   geom_point(size = 2, alpha = 0.5) +
@@ -211,8 +215,11 @@ ggplot(aes(x = log(FlyWeight), y = log(organ_weight), shape = Sex, color = organ
   ylab("log10 Weight (mg)") +
   xlab("log10 Body Weight (mg)")
 
+ggsave(Fig.3, file = "./output/Fig.3.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
+
 #The rest
-tach_master_impute_long %>%
+Fig.4 = tach_master_impute_long %>%
   filter(organ %in% c("HeadWeight", "WingWeight", "LegsWeight")) %>%
   ggplot(aes(x = log(FlyWeight), y = log(organ_weight), shape = Sex, color = organ)) +
   geom_point(size = 2, alpha = 0.5) +
@@ -232,23 +239,33 @@ tach_master_impute_long %>%
   geom_label(show.legend = FALSE, aes(x = 2.95, y = -1.4, label = "Wings", 
                                       size = 10), color = "black")
   
+ggsave(Fig.4, file = "./output/Fig.4.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
 #Didn't he do relative body part size plotted against size?
 
-ggplot(tach_master_impute, aes(x = FlyWeight, y = HeadWeight/FlyWeight, color = Sex)) +
+Fig.5 = ggplot(tach_master_impute, aes(x = FlyWeight, y = HeadWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm", formula = y ~ poly(x, 2), aes(group = 1), color = "black")
 
-ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
+ggsave(Fig.5, file = "./output/Fig.5.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
+
+Fig.6 = ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm", formula = y ~ poly(x, 2))
 
-ggplot(tach_master_impute, aes(x = FlyWeight, y = AbWeight/FlyWeight, color = Sex)) +
+ggsave(Fig.6, file = "./output/Fig.6.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
+
+Fig.7 = ggplot(tach_master_impute, aes(x = FlyWeight, y = AbWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm")
+
+ggsave(Fig.7, file = "./output/Fig.7.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
 
 
 #Seems like there might a wing-weight that is fucked up - outlier removed - should probably remove all data where the wing category is False
