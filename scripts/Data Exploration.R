@@ -30,6 +30,7 @@ tach_master = tach_master %>%
 #Let's impute NA values. 
 library(caret)
 #install.packages("VIM")
+install.packages("VIM")
 library(VIM)
 
 
@@ -61,8 +62,28 @@ Fig.2 = ggplot(tach_master_impute, aes(x = HeadCapsuleWidth, y = FlyWeight, colo
 ggsave(Fig.2, file = "./output/Fig.2.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
 #best model seems to be one that includes both, additively.
+lm0 = lm(FlyWeight ~ sib_number, data = tach_master_impute)
 lm1 = lm(FlyWeight ~ sib_number + HeadCapsuleWidth, data = tach_master_impute)
+lm2 = lm(FlyWeight ~ sib_number*HeadCapsuleWidth, data = tach_master_impute)
+lm3 = lm(FlyWeight ~ sib_number*HeadCapsuleWidth*Sex, data = tach_master_impute)
+
+summary(lm0)
 summary(lm1)
+summary(lm2)
+summary(lm3)
+
+AIC(lm1)
+AIC(lm2)
+AIC(lm3)
+
+tach_master_impute %>%
+  filter(!is.na(FlyWeight)) %>%
+  mutate(residuals = lm0$residuals) %>%
+  ggplot(aes(x = residuals, y = HeadCapsuleWidth)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    theme_classic()
+
 #Also interesting to note how sex doesn't come into play here... it makes the model worse. Indicating that this relationship isn't
 #different among the sexes
 
@@ -272,7 +293,7 @@ Fig.7 = ggplot(tach_master_impute, aes(x = FlyWeight, y = AbWeight/FlyWeight, co
 
 ggsave(Fig.7, file = "./output/Fig.7.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
-Fig.8 = ggplot(tach_master_impute, aes(x = FlyWeight, y = WingWeight/FlyWeight, color = Sex)) +
+Fig.8 = ggplot(subset(tach_master_impute, WingWeight < 0.5), aes(x = FlyWeight, y = WingWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm") +
@@ -305,7 +326,64 @@ ggplot(tach_master_impute, aes(x = FlyWeight, y = as.numeric(LegsWeight)/FlyWeig
 
 
 
+#Using the calorimetry data to compute energy measurements
 
+#install.packages("stringr")
+library(stringr)
+lm_head_summ
+lm_thorax_summ
+lm_ab_summ
+
+tach_master_impute_long$organ = str_replace(tach_master_impute_long$organ, "Weight", "")
+
+ tach_master_impute_long = tach_master_impute_long %>%
+  mutate(calories = ifelse(organ == "Head", organ_weight*lm_head_summ[[2]],
+                           ifelse(organ == "Ab", organ_weight*lm_ab_summ[[2]],
+                                  ifelse(organ == "Thorax", organ_weight*lm_thorax_summ[[2]], NA))))
+  
+
+ggplot(tach_master_impute_long, aes(x = log(FlyWeight), y = log(calories), color = Sex, pch = organ)) +
+  geom_point(size = 3, alpha = 0.6) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_classic()
+
+
+tach_master_cal = tach_master %>%
+  select(UniqueFlyID, Sex, FlyWeight, HeadWeight, ThoraxWeight, AbWeight) %>%
+  mutate(head_cal = (HeadWeight*lm_head_summ[[2]]),
+         thorax_cal = ThoraxWeight*lm_thorax_summ[[2]], 
+         ab_cal = AbWeight*lm_ab_summ[[2]])
+
+
+
+ggplot(tach_master_cal, aes(x = thorax_cal, y = ab_cal, color = Sex)) +
+  geom_point(aes(size = as.numeric(FlyWeight))) +
+  geom_smooth(method = "lm") +
+  theme_classic()
+
+ggplot(tach_master_cal, aes(x = head_cal, y = ab_cal, color = Sex)) +
+  geom_point(aes(size = as.numeric(FlyWeight))) +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 3)) +
+  theme_classic()
+
+ggplot(tach_master_cal, aes(x = head_cal, y = thorax_cal, color = Sex)) +
+  geom_point(aes(size = as.numeric(FlyWeight))) +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2)) +
+  theme_classic()
+
+
+
+ggplot(tach_master_cal, aes(x = FlyWeight, y = HeadCalDens, color = Sex)) +
+  geom_point(size = 4, alpha = 0.6, pch = 17) +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+  geom_point(aes(x = FlyWeight, y = ThoraxCalDens, color = Sex), size = 4, alpha = 0.6, pch = 16) +
+    geom_smooth(aes(x = FlyWeight, y = ThoraxCalDens, color = Sex), method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+  geom_point(aes(x = FlyWeight, y = AbCalDens, color = Sex), size = 4, alpha = 0.6, pch = 18) +
+    geom_smooth(aes(x = FlyWeight, y = AbCalDens, color = Sex), method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+  theme_classic() +
+  xlab("Flight Weight (mg)") +
+  ylab("Calorie Density (Calories/mg)")
 
 
 
