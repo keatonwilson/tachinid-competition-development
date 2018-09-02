@@ -24,7 +24,7 @@ calories_filtered = calories_df %>%
 calories_filtered %>%
   ggplot(aes(x = tissue_weight, y = sample_cal, color = factor(sex))) +
   geom_point() +
-  facet_wrap(~ tissue_ID) +
+  facet_wrap(~ tissue_ID, scales = "free") +
   theme_classic() +
   geom_smooth(method = "lm", aes(group = 1))
 

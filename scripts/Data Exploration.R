@@ -5,6 +5,8 @@
 
 #Packages
 library(tidyverse)
+library(purrr)
+library(broom)
 
 #Importing the master data file
 tach_master = read_csv(file = "Data/TachDataFull.csv")
@@ -43,21 +45,31 @@ tach_master_impute$FlyWeight = as.numeric(tach_master_impute$FlyWeight)
 
 #Fly weight as a function of sibling number
 Fig.1 = ggplot(tach_master_impute, aes(x = sib_number, y = FlyWeight, color = Sex)) +
-  geom_jitter(size = 3, alpha = 0.6) +
+  geom_jitter(size = 3, alpha = 0.7) +
   theme_classic() +
   geom_smooth(method = "lm", aes(group = 1)) +
   xlab("Cohort Size") +
-  ylab("Fly Weight (mg)")
+  ylab("Adult Fly Weight (mg)")
 
 ggsave(Fig.1, file = "./output/Fig.1.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
+#Summary table
+tach_master_impute %>%
+  group_by(CaterpillarID) %>%
+  summarize(sib_number = mean(sib_number),
+            avg_fly_weight = mean(FlyWeight, na.rm = TRUE), 
+            n = n()) %>%
+  arrange(desc(sib_number))
+
+
+
 #Fly weight as a function of head capsule size
 Fig.2 = ggplot(tach_master_impute, aes(x = HeadCapsuleWidth, y = FlyWeight, color = Sex)) +
-  geom_jitter(size = 3, alpha = 0.6) +
+  geom_jitter(size = 3, alpha = 0.7) +
   theme_classic() +
   geom_smooth(method = "lm", aes(group = 1)) +
   xlab("Host head-capsule width (mm)") +
-  ylab("Fly Weight (mg)")
+  ylab("Adult Fly Weight (mg)")
 
 ggsave(Fig.2, file = "./output/Fig.2.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
@@ -72,9 +84,20 @@ summary(lm1)
 summary(lm2)
 summary(lm3)
 
+AIC(lm0)
 AIC(lm1)
 AIC(lm2)
 AIC(lm3)
+
+#Checking average differences between males and females
+
+tach_master_impute %>%
+  group_by(Sex) %>%
+  summarize(avg_weight = mean(FlyWeight, na.rm = TRUE),
+            sd = sd(FlyWeight, na.rm = TRUE),
+            n = n())
+
+lm.sex = lm(FlyWeight ~ Sex, data = tach_master_impute)
 
 tach_master_impute %>%
   filter(!is.na(FlyWeight)) %>%
@@ -262,6 +285,39 @@ Fig.4 = tach_master_impute_long %>%
   
 ggsave(Fig.4, file = "./output/Fig.4.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
+#Summary Table of slopes
+lm_summaries_1 = tach_master_impute_long %>%
+  select(-WingIntact) %>%
+  split(.$organ) %>%
+  map(~ lm(log(organ_weight) ~ log(FlyWeight) + Sex, data = .x)) %>%
+  map(summary) %>%
+  map(~ tidy(.x))
+
+lm_summaries_2 = tach_master_impute_long %>%
+  select(-WingIntact) %>%
+  split(.$organ) %>%
+  map(~ lm(organ_weight ~ FlyWeight*Sex, data = .x)) %>%
+  map(summary) %>%
+  map(~ glance(.x))
+
+test = lm_summaries_1[[1]]
+
+slope_grabber = function(x) {
+  female_slope = x[2,2]
+  male_slope = female_slope + x[4,2]
+  print(c(female_slope, male_slope))
+}
+
+slope_grabber(test)
+lapply(lm_summaries_1, slope_grabber)
+
+
+#Testing the linear models - doesn't make sense with the figure above. 
+#
+lm_test = tach_master_impute_long %>%
+  filter(organ == "AbWeight") %>%
+lm(log(organ_weight) ~ log(FlyWeight) + Sex, data = .)
+
 #Didn't he do relative body part size plotted against size?
 
 Fig.5 = ggplot(tach_master_impute, aes(x = FlyWeight, y = HeadWeight/FlyWeight, color = Sex)) +
@@ -389,3 +445,20 @@ ggplot(tach_master_cal, aes(x = FlyWeight, y = HeadCalDens, color = Sex)) +
 
 
 
+
+#Testing RMA shit
+
+install.packages("smatr")
+library(smatr)
+
+tach_master_impute
+
+sma.1 = sma(log(HeadWeight) ~ log(FlyWeight), data = tach_master_impute)
+ols.1 = lm(log(HeadWeight) ~ log(FlyWeight), data = tach_master_impute)
+
+
+tach_master_impute %>%
+  ggplot(aes(x = log(FlyWeight), y = log(HeadWeight))) +
+  geom_point() +
+  geom_abline(slope = 0.6887, intercept = -1.5383) +
+  geom_abline(slope = 0.7644, intercept = -1.6936, lty = 2)
