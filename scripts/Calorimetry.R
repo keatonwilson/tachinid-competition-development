@@ -6,7 +6,7 @@
 
 #Packages
 library(tidyverse)
-install.packages("googlesheets")
+#install.packages("googlesheets")
 library(googlesheets)
 
 #Reading in the data from google sheets

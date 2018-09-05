@@ -7,6 +7,7 @@
 library(tidyverse)
 library(purrr)
 library(broom)
+library(ggpubr)
 
 #Importing the master data file
 tach_master = read_csv(file = "Data/TachDataFull.csv")
@@ -329,6 +330,11 @@ Fig.5 = ggplot(tach_master_impute, aes(x = FlyWeight, y = HeadWeight/FlyWeight, 
 
 ggsave(Fig.5, file = "./output/Fig.5.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
+#modeling
+
+lm.0.head = lm(HeadWeight/FlyWeight ~poly(FlyWeight, 2), data = tach_master_impute %>%
+                 filter(!is.na(FlyWeight)))
+summary(lm.0.head)
 
 Fig.6 = ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
@@ -340,6 +346,29 @@ Fig.6 = ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight
 ggsave(Fig.6, file = "./output/Fig.6.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
 
+#Modeling
+
+lm.0.thor = lm(ThoraxWeight/FlyWeight ~poly(FlyWeight, 2) + Sex, data = tach_master_impute %>%
+                             filter(!is.na(FlyWeight)))
+summary(lm.0.thor)
+
+tach_master_pred = tach_master_impute %>%
+  select(Sex, FlyWeight, ThoraxWeight)
+preds = predict(lm.0.thor, tach_master_pred, se.fit = TRUE, interval = "confidence", level = 0.95)
+tach_master_pred$fit = preds[[1]][,1]
+tach_master_pred$lwr = preds[[1]][,2]
+tach_master_pred$upr = preds[[1]][,3]
+
+ Fig.6 = ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
+  geom_point(size = 3, alpha = 0.6) +
+  theme_classic() +
+  #geom_smooth(method = "glm", formula = y ~ poly(x, 2)) +
+  geom_line(data = tach_master_pred, aes(y = pred)) +
+  geom_ribbon(data = tach_master_pred, aes(ymin = lwr, ymax = upr, group = Sex), alpha = 0.2, color = NA) +
+  xlab("Fly weight (mg)") +
+  ylab("Thorax weight (mg) / Body weight (mg)")
+
+
 Fig.7 = ggplot(tach_master_impute, aes(x = FlyWeight, y = AbWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
@@ -349,19 +378,33 @@ Fig.7 = ggplot(tach_master_impute, aes(x = FlyWeight, y = AbWeight/FlyWeight, co
 
 ggsave(Fig.7, file = "./output/Fig.7.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
+#Modeling
+lm.0.ab = lm(AbWeight/FlyWeight ~ FlyWeight + Sex, data = tach_master_impute %>%
+                           filter(!is.na(FlyWeight)))
+summary(lm.0.ab)
+
 Fig.8 = ggplot(subset(tach_master_impute, WingWeight < 0.5), aes(x = FlyWeight, y = WingWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "glm") +
+  geom_smooth(method = "glm", aes(group = 1), color = "black") +
   xlab("Fly weight (mg)") +
   ylab("Wings weight (mg) / Body weight (mg)")
 
 ggsave(Fig.8, file = "./output/Fig.8.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
+#modeling
+lm.0.wing = lm(WingWeight/FlyWeight ~ FlyWeight+Sex, data = tach_master_impute %>%
+                 filter(!is.na(FlyWeight)))
+summary(lm.0.wing)
+
+lm.0.legs = lm(as.numeric(LegsWeight)/FlyWeight ~ FlyWeight+Sex, data = tach_master_impute %>%
+                 filter(!is.na(FlyWeight) & !is.na(LegsWeight)))
+summary(lm.0.legs)
+
 Fig.9 = ggplot(tach_master_impute, aes(x = FlyWeight, y = as.numeric(LegsWeight)/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "glm") +
+  geom_smooth(method = "glm", aes(group = 1), color = "black") +
   xlab("Fly weight (mg)") +
   ylab("Legs weight (mg) / Body weight (mg)")
 
@@ -381,6 +424,9 @@ ggplot(tach_master_impute, aes(x = FlyWeight, y = as.numeric(LegsWeight)/FlyWeig
   geom_smooth(method = "glm", color = "black", aes(group = 1))
 
 
+#Multipanel plot
+gfinal = ggarrange(Fig.5, Fig.8, Fig.9, Fig.6, Fig.7, common.legend = TRUE, ncol = 2, nrow = 3)
+ggsave(gfinal, file = "./output/Fig6(paneled).pdf", device = "pdf", width = 8.5, height = 8, units = "in")
 
 #Using the calorimetry data to compute energy measurements
 
