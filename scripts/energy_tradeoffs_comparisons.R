@@ -88,12 +88,14 @@ Fig_7_cal = ggplot(tach_master_cal, aes(x = thorax_cal, y = ab_cal, color = Sex)
   theme_classic() +
   xlab("Thorax Calories") +
   ylab("Abdomen Calories") +
+  geom_abline(intercept = 0, slope = 1, lty = 2) +
   scale_size_continuous(name = "Fly Weight (mg)", range = c(1,5)) +
   scale_color_discrete(labels = c("Female", "Male")) +
   guides(color=guide_legend(override.aes=list(fill=NA)))
 
 #Stats
 lm_cal_1 = lm(ab_cal ~ thorax_cal*Sex, data = tach_master_cal)
+summary(lm_cal_1)
 
 Fig_8_cal = ggplot(tach_master_cal, aes(x = head_cal, y = ab_cal, color = Sex)) +
   geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.6) +
@@ -101,17 +103,43 @@ Fig_8_cal = ggplot(tach_master_cal, aes(x = head_cal, y = ab_cal, color = Sex)) 
   theme_classic() +
   xlab("Head Calories") +
   ylab("Abdomen Calories") +
+  geom_abline(intercept = 0, slope = 1, lty = 2) +
   scale_size_continuous(name = "Fly Weight (mg)", range = c(1,5)) +
   scale_color_discrete(labels = c("Female", "Male")) +
   guides(color=guide_legend(override.aes=list(fill=NA)))
 
+#Stats
+lm_cal_2 = lm(ab_cal ~ head_cal + Sex, data = tach_master_cal)
+summary(lm_cal_2)
+
 
 Fig_9_cal = ggplot(tach_master_cal, aes(x = head_cal, y = thorax_cal, color = Sex)) +
   geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.6) +
-  geom_smooth(method = "lm", formula = y ~ poly(x, 2), alpha = 0.2) +
+  geom_smooth(method = "lm", alpha = 0.2) +
   theme_classic() +
   xlab("Head Calories") +
   ylab("Thorax Calories") +
+  geom_abline(intercept = 0, slope = 1, lty = 2) +
+  scale_size_continuous(name = "Fly Weight (mg)", range = c(1,5)) +
+  scale_color_discrete(labels = c("Female", "Male")) +
+  guides(color=guide_legend(override.aes=list(fill=NA)))
+
+#Stats
+lm_cal_3 = lm(thorax_cal ~ head_cal + Sex, data = tach_master_cal) 
+
+#Have to plot manually because it's additive
+preds_fig_9 = as.tibble(predict(lm_cal_3, tach_master_cal, se.fit = TRUE, interval = "confidence", level = 0.95)$fit)
+class(preds_fig_9[[1]])
+
+Fig_9_cal = bind_cols(tach_master_cal, preds_fig_9) %>%
+  ggplot(aes(x = head_cal, y = thorax_cal, color = Sex)) +
+  geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.6) +
+  geom_line(aes(y = fit)) +
+  geom_ribbon(aes(ymax = upr, ymin = lwr, group = Sex), alpha = 0.2, color = NA) +
+  theme_classic() +
+  xlab("Head Calories") +
+  ylab("Thorax Calories") +
+  geom_abline(intercept = 0, slope = 1, lty = 2) +
   scale_size_continuous(name = "Fly Weight (mg)", range = c(1,5)) +
   scale_color_discrete(labels = c("Female", "Male")) +
   guides(color=guide_legend(override.aes=list(fill=NA)))
@@ -152,9 +180,9 @@ test = tach_master_cal %>%
   xlab("Normalized Thorax Calories") +
   ylab("Normalized Abdomen Calories")
 
-ggExtra::ggMarginal(test, type = "density", groupColour = TRUE, groupFill = TRUE)
+test = ggExtra::ggMarginal(test, type = "density", groupColour = TRUE, groupFill = TRUE)
 
-tach_master_cal %>%
+test2 =  tach_master_cal %>%
   mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
   ggplot(aes(x = thorax_cal/total_cal, y = head_cal/total_cal, color = Sex)) +
   geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.7) +
@@ -165,7 +193,7 @@ tach_master_cal %>%
   ylab("Normalized Head Calories")
   
 
-tach_master_cal %>%
+test3 = tach_master_cal %>%
   mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
   ggplot(aes(x = ab_cal/total_cal, y = head_cal/total_cal, color = Sex)) +
   geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.7) +
@@ -174,3 +202,4 @@ tach_master_cal %>%
   scale_color_discrete(labels = c("Female", "Male")) +
   xlab("Normalized Abdomen Calories") +
   ylab("Normalized Head Calories")
+
