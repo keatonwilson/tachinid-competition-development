@@ -33,7 +33,7 @@ tach_master = tach_master %>%
 #Let's impute NA values. 
 library(caret)
 #install.packages("VIM")
-install.packages("VIM")
+#install.packages("VIM")
 library(VIM)
 
 
@@ -363,7 +363,7 @@ tach_master_pred$upr = preds[[1]][,3]
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   #geom_smooth(method = "glm", formula = y ~ poly(x, 2)) +
-  geom_line(data = tach_master_pred, aes(y = pred)) +
+  geom_line(data = tach_master_pred, aes(y = fit)) +
   geom_ribbon(data = tach_master_pred, aes(ymin = lwr, ymax = upr, group = Sex), alpha = 0.2, color = NA) +
   xlab("Fly weight (mg)") +
   ylab("Thorax weight (mg) / Body weight (mg)")
@@ -457,12 +457,49 @@ tach_master_cal = tach_master %>%
          thorax_cal = ThoraxWeight*lm_thorax_summ[[2]], 
          ab_cal = AbWeight*lm_ab_summ[[2]])
 
+tach_master_impute_long
+
+#A better figure
+##The interesting body parts
+Fig.10 = tach_master_impute_long %>%
+  filter(organ == "Thorax" | organ == "Ab") %>%
+  ggplot(aes(x = log(FlyWeight), y = log(calories), shape = Sex, color = organ)) +
+  geom_point(size = 2, alpha = 0.5) +
+  geom_smooth(method = "lm", aes(lty = Sex)) +
+  theme_classic() +
+  geom_abline(slope = 1, intercept = 0, lty = 3) +
+  coord_cartesian(xlim = c(0.5, 3), ylim = c(-2,4)) +
+  geom_point(data = tach_master_impute_long %>%
+            filter(organ == "Head"),
+               size = 2, alpha = 0.5) +
+  geom_smooth(data = tach_master_impute_long %>%
+                filter(organ == "Head"), method = "lm", aes(group = 1)) +
+  scale_color_discrete(guide = FALSE) +
+  scale_shape_discrete(labels = c("Female", "Male")) +
+  scale_linetype_discrete(guide = FALSE) +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 3.55, label = "Thorax",
+                                      size = 9), color = "black") +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 2.7, label = "Abdomen",
+                                      size = 9), color = "black") +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 1, label = "Head",
+                                     size = 9), color = "black") +
+  ylab("log calories") +
+  xlab("log10 Body Weight (mg)")
+
+ggsave(Fig.10, file = "./output/Fig.10.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
 
-ggplot(tach_master_cal, aes(x = thorax_cal, y = ab_cal, color = Sex)) +
-  geom_point(aes(size = as.numeric(FlyWeight))) +
-  geom_smooth(method = "lm") +
-  theme_classic()
+
+
+Fig_7_cal = ggplot(tach_master_cal, aes(x = thorax_cal, y = ab_cal, color = Sex)) +
+  geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.6) +
+  geom_smooth(method = "lm", alpha = 0.2) +
+  theme_classic() +
+  xlab("Thorax Calories") +
+  ylab("Abdomen Calories") +
+  scale_size_continuous(name = "Fly Weight (mg)", range = c(1,5)) +
+  scale_color_discrete(labels = c("Female", "Male")) +
+  guides(color=guide_legend(override.aes=list(fill=NA)))
 
 ggplot(tach_master_cal, aes(x = head_cal, y = ab_cal, color = Sex)) +
   geom_point(aes(size = as.numeric(FlyWeight))) +
