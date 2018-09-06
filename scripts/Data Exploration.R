@@ -236,8 +236,8 @@ ggplot(tach_master_impute, aes(x = log(FlyWeight), y = log(HeadWeight), shape = 
 #Better way to make the plot above - but with changes described by Robbie
 tach_master_impute
 tach_master_impute_long = tach_master_impute %>%
-  select(Sex, FlyWeight:WingIntact) %>%
-  gather(key = "organ", value = "organ_weight", -Sex, -FlyWeight, -WingIntact)
+  select(UniqueFlyID, Sex, FlyWeight:WingIntact) %>%
+  gather(key = "organ", value = "organ_weight", -Sex, -FlyWeight, -WingIntact, -UniqueFlyID)
 tach_master_impute_long$organ = factor(tach_master_impute_long$organ)
 tach_master_impute_long$organ_weight = as.numeric(tach_master_impute_long$organ_weight)
 
@@ -442,6 +442,10 @@ tach_master_impute_long$organ = str_replace(tach_master_impute_long$organ, "Weig
   mutate(calories = ifelse(organ == "Head", organ_weight*lm_head_summ[[2]],
                            ifelse(organ == "Ab", organ_weight*lm_ab_summ[[2]],
                                   ifelse(organ == "Thorax", organ_weight*lm_thorax_summ[[2]], NA))))
+ 
+ tach_master_impute_long %>%
+   group_by(organ, Sex) %>%
+   summarize(mean_calories = mean(calories))
   
 
 ggplot(tach_master_impute_long, aes(x = log(FlyWeight), y = log(calories), color = Sex, pch = organ)) +
@@ -534,7 +538,34 @@ tach_master_cal %>%
   select(Sex, FlyWeight, head_energy_dens, thorax_energy_dens, ab_energy_dens)
 
 
+tach_cal = tach_master_impute_long %>%
+  mutate(cal_dens = calories/organ_weight) %>%
+  group_by(UniqueFlyID) %>%
+  mutate(total_cal_dens = sum(cal_dens, na.rm = TRUE),
+         total_cals = sum(calories, na.rm = TRUE)) %>%
+  arrange(UniqueFlyID)
 
+ggplot(data = tach_cal, aes(x = organ_weight, y = cal_dens/total_cals, color = as.factor(organ))) +
+           geom_point() +
+           theme_classic()
+
+tach_master_cal %>%
+  mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
+  ggplot(aes(x = thorax_cal/total_cal, y = ab_cal/total_cal, color = Sex)) +
+  geom_point() +
+  theme_classic()
+
+tach_master_cal %>%
+  mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
+  ggplot(aes(x = thorax_cal/total_cal, y = head_cal/total_cal, color = Sex)) +
+  geom_point() +
+  theme_classic()
+
+tach_master_cal %>%
+  mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
+  ggplot(aes(x = ab_cal/total_cal, y = head_cal/total_cal, color = Sex)) +
+  geom_point() +
+  theme_classic()
 
 
 
