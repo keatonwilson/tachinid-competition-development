@@ -122,3 +122,5 @@ lm_head_cap = lm(WanderWeight ~ HeadCapsuleWidth, data = head_cap_wander %>%
 summary(lm_head_cap)
 
 #Not great - but there are a lot of other variables embedded in that - perhaps it's better to use other examples from the literature.
+
+

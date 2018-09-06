@@ -26,7 +26,9 @@ calories_filtered %>%
   geom_point() +
   facet_wrap(~ tissue_ID, scales = "free") +
   theme_classic() +
-  geom_smooth(method = "lm", aes(group = 1))
+  geom_smooth(method = "lm", aes(group = 1)) +
+  xlim(c(0, 30)) +
+  ylim(c(0, 150))
 
 #linear models
 lm.ab = calories_filtered %>%
@@ -70,6 +72,6 @@ calories_filtered %>%
 #Extracting linear model features for later use
 
 library(broom)
-lm_ab_summ = tidy(lm.ab.2)
-lm_head_summ = tidy(lm.head.2)
-lm_thorax_summ = tidy(lm.thorax.2)
+lm_ab_summ = tidy(lm.ab)
+lm_head_summ = tidy(lm.head)
+lm_thorax_summ = tidy(lm.thorax)

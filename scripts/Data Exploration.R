@@ -529,7 +529,7 @@ Fig_9_cal = ggplot(tach_master_cal, aes(x = head_cal, y = thorax_cal, color = Se
   scale_color_discrete(labels = c("Female", "Male")) +
   guides(color=guide_legend(override.aes=list(fill=NA)))
 
-
+library(ggExtra)
 
 tach_master_cal %>%
   mutate(head_energy_dens = head_cal/HeadWeight,
@@ -549,11 +549,16 @@ ggplot(data = tach_cal, aes(x = organ_weight, y = cal_dens/total_cals, color = a
            geom_point() +
            theme_classic()
 
-tach_master_cal %>%
+#This plot demonstrates the calorie trade-off between abdomens and thoraces beautifully
+test = tach_master_cal %>%
   mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
-  ggplot(aes(x = thorax_cal/total_cal, y = ab_cal/total_cal, color = Sex)) +
-  geom_point() +
-  theme_classic()
+  ggplot(aes(x = thorax_cal/total_cal, y = ab_cal/total_cal, color = Sex, group = Sex)) +
+  geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.7) +
+  theme_classic() +
+  scale_size_continuous("Fly Weight (mg)") +
+  scale_color_discrete(labels = c("Female", "Male"))
+
+ggExtra::ggMarginal(test, type = "density", groupColour = TRUE, groupFill = TRUE)
 
 tach_master_cal %>%
   mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
