@@ -33,17 +33,31 @@ lm.ab = calories_filtered %>%
   filter(tissue_ID == "Abdomen") %>%
 lm(sample_cal ~ 0 + tissue_weight, data = .)
 
+lm.ab.2 = calories_filtered %>%
+  filter(tissue_ID == "Abdomen") %>%
+  lm(sample_cal ~ tissue_weight, data = .)
+
+
 lm.head = calories_filtered %>%
   filter(tissue_ID == "Head") %>%
   lm(sample_cal ~ 0 + tissue_weight, data = .)
+
+lm.head.2 = calories_filtered %>%
+  filter(tissue_ID == "Head") %>%
+  lm(sample_cal ~ tissue_weight, data = .)
+
 
 lm.thorax = calories_filtered %>%
   filter(tissue_ID == "Thorax") %>%
   lm(sample_cal ~ 0 + tissue_weight, data = .)
 
-summary(lm.ab)
-summary(lm.head)
-summary(lm.thorax)
+lm.thorax.2 = calories_filtered %>%
+  filter(tissue_ID == "Thorax") %>%
+  lm(sample_cal ~ tissue_weight, data = .)
+
+summary(lm.ab.2)
+summary(lm.head.2)
+summary(lm.thorax.2)
 
 
 calories_filtered %>%
@@ -56,6 +70,6 @@ calories_filtered %>%
 #Extracting linear model features for later use
 
 library(broom)
-lm_ab_summ = tidy(lm.ab)
-lm_head_summ = tidy(lm.head)
-lm_thorax_summ = tidy(lm.thorax)
+lm_ab_summ = tidy(lm.ab.2)
+lm_head_summ = tidy(lm.head.2)
+lm_thorax_summ = tidy(lm.thorax.2)

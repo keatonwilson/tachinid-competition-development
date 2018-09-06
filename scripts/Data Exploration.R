@@ -501,28 +501,37 @@ Fig_7_cal = ggplot(tach_master_cal, aes(x = thorax_cal, y = ab_cal, color = Sex)
   scale_color_discrete(labels = c("Female", "Male")) +
   guides(color=guide_legend(override.aes=list(fill=NA)))
 
-ggplot(tach_master_cal, aes(x = head_cal, y = ab_cal, color = Sex)) +
-  geom_point(aes(size = as.numeric(FlyWeight))) +
-  geom_smooth(method = "lm", formula = y ~ poly(x, 3)) +
-  theme_classic()
+#Stats
+lm_cal_1 = lm(ab_cal ~ thorax_cal*Sex, data = tach_master_cal)
 
-ggplot(tach_master_cal, aes(x = head_cal, y = thorax_cal, color = Sex)) +
-  geom_point(aes(size = as.numeric(FlyWeight))) +
-  geom_smooth(method = "lm", formula = y ~ poly(x, 2)) +
-  theme_classic()
-
-
-
-ggplot(tach_master_cal, aes(x = FlyWeight, y = HeadCalDens, color = Sex)) +
-  geom_point(size = 4, alpha = 0.6, pch = 17) +
-  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
-  geom_point(aes(x = FlyWeight, y = ThoraxCalDens, color = Sex), size = 4, alpha = 0.6, pch = 16) +
-    geom_smooth(aes(x = FlyWeight, y = ThoraxCalDens, color = Sex), method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
-  geom_point(aes(x = FlyWeight, y = AbCalDens, color = Sex), size = 4, alpha = 0.6, pch = 18) +
-    geom_smooth(aes(x = FlyWeight, y = AbCalDens, color = Sex), method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+Fig_8_cal = ggplot(tach_master_cal, aes(x = head_cal, y = ab_cal, color = Sex)) +
+  geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.6) +
+  geom_smooth(method = "lm", alpha = 0.2) +
   theme_classic() +
-  xlab("Flight Weight (mg)") +
-  ylab("Calorie Density (Calories/mg)")
+  xlab("Head Calories") +
+  ylab("Abdomen Calories") +
+  scale_size_continuous(name = "Fly Weight (mg)", range = c(1,5)) +
+  scale_color_discrete(labels = c("Female", "Male")) +
+  guides(color=guide_legend(override.aes=list(fill=NA)))
+
+
+Fig_9_cal = ggplot(tach_master_cal, aes(x = head_cal, y = thorax_cal, color = Sex)) +
+  geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.6) +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), alpha = 0.2) +
+  theme_classic() +
+  xlab("Head Calories") +
+  ylab("Thorax Calories") +
+  scale_size_continuous(name = "Fly Weight (mg)", range = c(1,5)) +
+  scale_color_discrete(labels = c("Female", "Male")) +
+  guides(color=guide_legend(override.aes=list(fill=NA)))
+
+
+
+tach_master_cal %>%
+  mutate(head_energy_dens = head_cal/HeadWeight,
+         thorax_energy_dens = thorax_cal/ThoraxWeight,
+         ab_energy_dens = ab_cal/AbWeight) %>%
+  select(Sex, FlyWeight, head_energy_dens, thorax_energy_dens, ab_energy_dens)
 
 
 
