@@ -175,7 +175,7 @@ test = tach_master_cal %>%
   ggplot(aes(x = thorax_cal/total_cal, y = ab_cal/total_cal, color = Sex, group = Sex)) +
   geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.7) +
   theme_classic() +
-  scale_size_continuous("Fly Weight (mg)") +
+  scale_size_continuous("Fly Weight (mg)", range = c(2,7)) +
   scale_color_discrete(labels = c("Female", "Male")) +
   xlab("Normalized Thorax Calories") +
   ylab("Normalized Abdomen Calories")
@@ -202,6 +202,9 @@ test2 =  tach_master_cal %>%
   scale_color_discrete(labels = c("Female", "Male")) +
   xlab("Normalized Thorax Calories") +
   ylab("Normalized Head Calories")
+
+test2 = ggExtra::ggMarginal(test2, type = "density", groupColour = TRUE, groupFill = TRUE)
+
   
 
 test3 = tach_master_cal %>%

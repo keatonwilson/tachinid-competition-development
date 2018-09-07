@@ -190,3 +190,30 @@ Fig.9 = ggplot(tach_master_impute, aes(x = FlyWeight, y = as.numeric(LegsWeight)
 #Multipanel plot
 gfinal = ggarrange(Fig.5, Fig.8, Fig.9, Fig.6, Fig.7, common.legend = TRUE, ncol = 2, nrow = 3)
 ggsave(gfinal, file = "./output/Fig6(paneled).pdf", device = "pdf", width = 8.5, height = 8, units = "in")
+
+
+#Testing out some new stuff
+
+ggplot(tach_master_impute, aes(x = sib_number, y = HeadWeight/FlyWeight, color = Sex)) +
+  geom_point() +
+  theme_classic() +
+  geom_smooth(method = "lm", aes(group = 1))
+
+lm_rel_head = lm(HeadWeight/FlyWeight ~ sib_number, data = tach_master_impute)
+summary(lm_rel_head)
+
+ggplot(tach_master_impute, aes(x = sib_number, y = ThoraxWeight/FlyWeight, color = Sex)) +
+  geom_point() +
+  theme_classic() +
+  geom_smooth(method = "lm")
+
+lm_rel_thorax = lm(ThoraxWeight/FlyWeight ~ sib_number*Sex, data = tach_master_impute)
+summary(lm_rel_thorax)
+
+ggplot(tach_master_impute, aes(x = sib_number, y = AbWeight/FlyWeight, color = Sex)) +
+  geom_point() +
+  theme_classic() +
+  geom_smooth(method = "lm")
+
+lm_rel_abdomen = lm(AbWeight/FlyWeight ~ sib_number*Sex, data = tach_master_impute)
+summary(lm_rel_abdomen)
