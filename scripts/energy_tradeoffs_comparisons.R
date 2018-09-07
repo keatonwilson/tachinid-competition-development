@@ -166,7 +166,7 @@ tach_cal = tach_master_impute_long %>%
 
 #Is this how Goggy is getting his plots? I'm not sure how to intrepret the y-axis here. 
 ggplot(data = tach_cal, aes(x = organ_weight, y = cal_dens/total_cals, color = as.factor(organ))) +
-  geom_point() +
+  geom_point(aes(shape = Sex)) +
   theme_classic()
 
 #This plot demonstrates the calorie trade-off between abdomens and thoraces beautifully
@@ -181,6 +181,17 @@ test = tach_master_cal %>%
   ylab("Normalized Abdomen Calories")
 
 test = ggExtra::ggMarginal(test, type = "density", groupColour = TRUE, groupFill = TRUE)
+
+ggsave(test, "./output/Fig10a.eps", width = 10, height = 8, units = "in", device = "eps")
+
+#stats
+stats_data = tach_master_cal %>%
+  mutate(total_cal = head_cal + thorax_cal + ab_cal,
+         rel_ab = ab_cal/total_cal, 
+         rel_thorax = thorax_cal/total_cal,
+         rel_head = head_cal/total_cal)
+
+lm_tradeoff_1 = lm(rel_ab ~ rel_thorax, data = stats_data)
 
 test2 =  tach_master_cal %>%
   mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
