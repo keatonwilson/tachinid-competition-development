@@ -83,7 +83,7 @@ Fig.10 = tach_master_impute_long %>%
 
 
 Fig_7_cal = ggplot(tach_master_cal, aes(x = thorax_cal, y = ab_cal, color = Sex)) +
-  geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.6) +
+  geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.7) +
   geom_smooth(method = "lm", alpha = 0.2) +
   theme_classic() +
   xlab("Thorax Calories") +
@@ -134,8 +134,8 @@ class(preds_fig_9[[1]])
 Fig_9_cal = bind_cols(tach_master_cal, preds_fig_9) %>%
   ggplot(aes(x = head_cal, y = thorax_cal, color = Sex)) +
   geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.6) +
-  geom_line(aes(y = fit)) +
-  geom_ribbon(aes(ymax = upr, ymin = lwr, group = Sex), alpha = 0.2, color = NA) +
+  geom_line(aes(y = fit), size = 1.25) +
+  geom_ribbon(aes(ymax = upr, ymin = lwr, group = Sex), alpha = 0.15, color = NA) +
   theme_classic() +
   xlab("Head Calories") +
   ylab("Thorax Calories") +
@@ -144,6 +144,8 @@ Fig_9_cal = bind_cols(tach_master_cal, preds_fig_9) %>%
   scale_color_discrete(labels = c("Female", "Male")) +
   guides(color=guide_legend(override.aes=list(fill=NA)))
 
+cal_cal = ggarrange(Fig_7_cal, Fig_8_cal, Fig_9_cal, common.legend = TRUE, labels = "auto", label.x = 0.85)
+ggsave(plot = cal_cal, filename = "./output/Figure6paneled.pdf", device = "pdf")
 
 #Normalized Energy Tradeoffs
 

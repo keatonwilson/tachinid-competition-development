@@ -46,7 +46,7 @@ Fig.3 = tach_master_impute_long %>%
   ylab("log10 Weight (mg)") +
   xlab("log10 Body Weight (mg)")
 
-#ggsave(Fig.3, file = "./output/Fig.3.pdf", device = "pdf", width = 10, height = 8, units = "in")
+ggsave(Fig.3, file = "./output/Fig.3.pdf", device = "pdf", width = 10, height = 8, units = "in")
 
 
 #The rest
@@ -78,6 +78,9 @@ Fig.4 = tach_master_impute_long %>%
                                       size = 10), color = "black")
 
 #ggsave(Fig.4, file = "./output/Fig.4.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
+Fig_4_paneled = ggarrange(Fig.3, Fig.4, common.legend = TRUE, labels = "auto", label.x = 0.85, nrow = 2)
+ggsave(filename = "./output/Fig_4_paneled.pdf", plot = Fig_4_paneled, device = "pdf", width = 8, height = 11, units = "in")
 
 #STATS for the two figures above
 #Summary Table of slopes
@@ -194,26 +197,52 @@ ggsave(gfinal, file = "./output/Fig6(paneled).pdf", device = "pdf", width = 8.5,
 
 #Testing out some new stuff
 
-ggplot(tach_master_impute, aes(x = sib_number, y = HeadWeight/FlyWeight, color = Sex)) +
-  geom_point() +
+fig_4_a = ggplot(tach_master_impute, aes(x = sib_number, y = HeadWeight/FlyWeight, color = Sex)) +
+  geom_jitter(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "lm", aes(group = 1))
+  geom_smooth(method = "lm", aes(group = 1), color = "black") +
+  xlab("Cohort Size") +
+  ylab("Head Weight/Body Weight") 
 
 lm_rel_head = lm(HeadWeight/FlyWeight ~ sib_number, data = tach_master_impute)
 summary(lm_rel_head)
 
-ggplot(tach_master_impute, aes(x = sib_number, y = ThoraxWeight/FlyWeight, color = Sex)) +
-  geom_point() +
+fig_4_b = ggplot(tach_master_impute, aes(x = sib_number, y = ThoraxWeight/FlyWeight, color = Sex)) +
+  geom_jitter(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  xlab("Cohort Size") +
+  ylab("Thorax Weight/Body Weight")
 
 lm_rel_thorax = lm(ThoraxWeight/FlyWeight ~ sib_number*Sex, data = tach_master_impute)
 summary(lm_rel_thorax)
 
-ggplot(tach_master_impute, aes(x = sib_number, y = AbWeight/FlyWeight, color = Sex)) +
+fig_4_c = ggplot(tach_master_impute, aes(x = sib_number, y = AbWeight/FlyWeight, color = Sex)) +
+  geom_jitter(alpha = 0.6, size = 3) +
+  theme_classic() +
+  geom_smooth(method = "lm") +
+  xlab("Cohort Size") +
+  ylab("Abdomen Weight/ Body Weight")
+
+lm_rel_abdomen = lm(AbWeight/FlyWeight ~ sib_number*Sex, data = tach_master_impute)
+summary(lm_rel_abdomen)
+
+Fig_4_paneled = ggarrange(fig_4_a, fig_4_b, fig_4_c, common.legend = TRUE, labels = c("a", "b", "c"),
+                          label.x = 0.85)
+
+#ggsave(plot = Fig_4_paneled, filename = "./output/Fig4(paneled).pdf", device = "pdf")
+
+ggplot(tach_master_impute, aes(x = sib_number, y = as.numeric(LegsWeight)/FlyWeight, color = Sex)) +
   geom_point() +
   theme_classic() +
   geom_smooth(method = "lm")
 
-lm_rel_abdomen = lm(AbWeight/FlyWeight ~ sib_number*Sex, data = tach_master_impute)
-summary(lm_rel_abdomen)
+lm_rel_legs = tach_master_impute %>%
+  mutate(LegsWeight = as.numeric(LegsWeight))
+
+lm_test = lm(LegsWeight/FlyWeight ~ sib_number, data = lm_rel_legs)
+
+ggplot(tach_master_impute, aes(x = sib_number, y = as.numeric(WingWeight)/FlyWeight, color = Sex)) +
+  geom_point() +
+  theme_classic() +
+  geom_smooth(method = "lm")
