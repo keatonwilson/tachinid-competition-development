@@ -32,6 +32,21 @@ tach_master = tach_master %>%
 tach_master_impute = as.tibble(kNN(tach_master, variable = colnames(tach_master[8:13]), numFun = "weightedMean"))
 tach_master_impute$FlyWeight = as.numeric(tach_master_impute$FlyWeight)
 
+#Number of imputations
+tach_master_impute %>%
+  select(UniqueFlyID, FlyWeight_imp:LegsWeight_imp) %>%
+  summarize(sum_fw = sum(FlyWeight_imp),
+            sum_hw = sum(HeadWeight_imp),
+            sum_thw = sum(ThoraxWeight_imp),
+            sum_abw = sum(AbWeight_imp),
+            sum_ww = sum(WingWeight_imp),
+            sum_lw = sum(LegsWeight_imp))
+
+#Total observations 
+tach_master_impute %>%
+  select(FlyWeight, HeadWeight, ThoraxWeight, AbWeight, WingWeight, LegsWeight) %>%
+  summarize(n())
+
 
 ##PLOTS##
 #Fly weight as a function of sibling number
