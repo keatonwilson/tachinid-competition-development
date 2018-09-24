@@ -219,3 +219,45 @@ test3 = tach_master_cal %>%
   xlab("Normalized Abdomen Calories") +
   ylab("Normalized Head Calories")
 
+
+#Recreating Figure 3, but with energy
+#The data in another structure that might be useful later on
+tach_master_sib_cal = tach_master_impute %>%
+  select(UniqueFlyID, Sex, FlyWeight, HeadWeight, ThoraxWeight, AbWeight, sib_number) %>%
+  mutate(head_cal = (HeadWeight*lm_head_summ[[2]]),
+         thorax_cal = ThoraxWeight*lm_thorax_summ[[2]], 
+         ab_cal = AbWeight*lm_ab_summ[[2]], 
+         total_cal = head_cal + thorax_cal + ab_cal) 
+
+ggplot(data = tach_master_sib_cal, aes(y = total_cal, x = FlyWeight, color = Sex)) +
+  geom_point() +
+  theme_classic()
+
+ggplot(data = tach_master_sib_cal, aes(x = sib_number, y = , color = Sex)) +
+  geom_point()
+
+ggplot(data = tach_master_sib_cal, aes(x = sib_number, y = (ab_cal/FlyWeight), color = Sex)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_classic()
+
+ggplot(data = tach_master_sib_cal, aes(x = sib_number, y = (thorax_cal/FlyWeight), color = Sex)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_classic()
+
+
+#Goggy meeting (2018-09-24) suggestion of Percent Calories/Fly Weight
+glimpse(tach_master_sib_cal)
+
+tach_master_sib_cal %>%
+  mutate(percent_head = head_cal/total_cal,
+         percent_thorax = thorax_cal/total_cal,
+         percent_ab = ab_cal/total_cal) %>%
+  select(Sex, FlyWeight, percent_head, percent_thorax, percent_ab) %>%
+  gather(value = percent, key = segment, percent_head:percent_ab) %>%
+ggplot(aes(x = FlyWeight, y = percent, color = segment, shape = Sex)) +
+  geom_point(size = 3, alpha = 0.6) +
+  theme_classic() +
+  #facet_wrap(~ segment) +
+  geom_smooth(method = "lm")
