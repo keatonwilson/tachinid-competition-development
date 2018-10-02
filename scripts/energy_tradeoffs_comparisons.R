@@ -176,7 +176,7 @@ test = tach_master_cal %>%
   mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
   ggplot(aes(x = thorax_cal/total_cal, y = ab_cal/total_cal, color = Sex, group = Sex)) +
   geom_point(aes(size = as.numeric(FlyWeight)), alpha = 0.7) +
-  theme_classic() +
+  theme_classic(base_size = 20) +
   scale_size_continuous("Fly Weight (mg)", range = c(2,7)) +
   scale_color_discrete(labels = c("Female", "Male")) +
   xlab("Normalized Thorax Calories") +
@@ -260,4 +260,109 @@ ggplot(aes(x = FlyWeight, y = percent, color = segment, shape = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   #facet_wrap(~ segment) +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm", aes(lty = Sex)) +
+  xlab("Fly Weight (mg)") +
+  ylab("Percent Calories")
+
+#A few modifications
+#1. Males Thoraces look polynomial to me. 
+#2. One line for heads
+
+tach_master_percent = tach_master_sib_cal %>%
+  mutate(percent_head = head_cal/total_cal,
+         percent_thorax = thorax_cal/total_cal,
+         percent_ab = ab_cal/total_cal) %>%
+  select(Sex, FlyWeight, percent_head, percent_thorax, percent_ab) %>%
+  gather(value = percent, key = segment, percent_head:percent_ab)
+
+p1 = tach_master_percent %>%
+ggplot(aes(x = FlyWeight, y = percent, shape = Sex, color = segment)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_smooth(data = tach_master_percent %>%
+                filter(segment == "percent_thorax"),
+              method = "lm",
+              formula = y ~ poly(x, 2),
+              color = "#00BFC4",
+              aes(lty = Sex)) +
+
+  geom_smooth(data = tach_master_percent %>%
+                filter(segment == "percent_head"),
+              aes(group = 1),
+              method = "lm",
+              color = "#7CAE00") +
+  geom_smooth(data = tach_master_percent %>%
+                filter(segment == "percent_ab"),
+              method = "lm",
+              formula = y ~ poly(x, 2),
+              color = "#F8766d",
+              aes(lty = Sex)) +
+  theme_classic(base_size = 20) +
+  xlab("Fly Weight (mg)") +
+  ylab("Percent Calories") +
+  scale_color_discrete(name = "Body Segment",
+                       labels = c("Abdomen", "Head", "Thorax"))
+  
+g1 = ggarrange(p1, test, nrow = 2, labels = "auto", label.x = 0.65)
+ggsave("./output/Fig10_test.pdf", height = 11, width = 8.5, units = "in")
+
+hist = ggplot(tach_master_impute, aes(x = FlyWeight, fill = Sex)) +
+  geom_histogram(aes(y = ..density..), position = "dodge", binwidth = 0.75) +
+ geom_density(aes(group = 1), alpha = 0.5) +
+  theme_classic(base_size = 20) + 
+    xlab("Fly Weight (mg)") +
+    ylab("Density") +
+  scale_fill_discrete(name = "Sex", 
+                      labels = c("Female", "Male")) 
+
+ggsave("./output/hist.pdf", hist)
+  
+library(diptest)
+library(modes)
+
+weights = tach_master_impute %>%
+  filter(!is.na(FlyWeight)) %>%
+  filter(FlyWeight_imp == "FALSE") %>%
+  select(FlyWeight) %>%
+  pull()
+
+weights2 = tach_master_impute %>%
+  filter(!is.na(FlyWeight)) %>%
+  #filter(FlyWeight_imp == "FALSE") %>%
+  select(FlyWeight) %>%
+  pull()
+
+weights_male = tach_master_impute %>%
+  filter(!is.na(FlyWeight)) %>%
+  filter(FlyWeight_imp == "FALSE") %>%
+  filter(Sex == "M") %>%
+  select(FlyWeight) %>%
+  pull()
+
+weights_female = tach_master_impute %>%
+  filter(!is.na(FlyWeight)) %>%
+  filter(FlyWeight_imp == "FALSE") %>%
+  filter(Sex == "F") %>%
+  select(FlyWeight) %>%
+  pull()
+
+
+
+
+
+dip.test(weights)
+dip.test(weights_male)
+dip.test(weights_female)
+
+
+bimodality_amplitude(weights_male, fig = TRUE)
+bimodality_amplitude(weights_female, fig = TRUE)
+bimodality_amplitude(weights2, fig = TRUE)
+bimodality_coefficient(weights2, TRUE)
+bimodality_coefficient(weights_male)
+bimodality_coefficient(weights_female)
+
+    
+weights
+plot(density(weights))
+
+shapiro.test(weights)

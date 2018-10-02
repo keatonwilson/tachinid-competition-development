@@ -246,3 +246,12 @@ ggplot(tach_master_impute, aes(x = sib_number, y = as.numeric(WingWeight)/FlyWei
   geom_point() +
   theme_classic() +
   geom_smooth(method = "lm")
+
+
+ggplot(tach_master_impute, aes(x = FlyWeight, fill = Sex)) +
+  geom_histogram(position = "dodge") +
+  theme_classic()
+
+tach_master_impute %>%
+  group_by(Sex) %>%
+  summarize(n())

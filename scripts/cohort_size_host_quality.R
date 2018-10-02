@@ -52,7 +52,7 @@ tach_master_impute %>%
 #Fly weight as a function of sibling number
 Fig.1 = ggplot(tach_master_impute, aes(x = sib_number, y = FlyWeight, color = Sex)) +
   geom_jitter(size = 4, alpha = 0.7, aes(shape = FlyWeight_imp)) +
-  theme_classic() +
+  theme_classic(base_size = 20) +
   geom_smooth(method = "lm", aes(group = 1), color = "black") +
   xlab("Cohort Size") +
   ylab("Adult Fly Weight (mg)") +
@@ -72,14 +72,16 @@ tach_master_impute %>%
 #Fly weight as a function of head capsule size
 Fig.2 = ggplot(tach_master_impute, aes(x = HeadCapsuleWidth, y = FlyWeight, color = Sex)) +
   geom_jitter(size = 4, alpha = 0.7, aes(shape = FlyWeight_imp)) +
-  theme_classic() +
+  theme_classic(base_size = 20) +
   geom_smooth(method = "lm", aes(group = 1), color = "black") +
   xlab("Host head-capsule width (mm)") +
   ylab("Adult Fly Weight (mg)") +
   scale_color_discrete(labels = c("Female", "Male")) +
   scale_shape_discrete("Imputed")
 
-#ggsave(Fig.2, file = "./output/Fig.2.pdf", device = "pdf", width = 10, height = 8, units = "in")
+fig_2_panel = ggarrange(Fig.1, Fig.2, labels = "auto", label.x = 0.85, common.legend = TRUE, nrow = 2)
+
+ggsave(fig_2_panel, file = "./output/Fig.2.pdf", device = "pdf", width = 8.5, height = 11, units = "in")
 
 #best model seems to be one that includes both cohort size and headcapsule width, additively.
 lm0 = lm(FlyWeight ~ sib_number, data = tach_master_impute)
@@ -125,12 +127,19 @@ head_cap_wander = read_csv(file = "Data/Parasitized Caterpillar Data.csv")
 
 head_cap_wander %>%
   filter(is.na(Parasitized)) %>%
+  filter(HeadCapsuleWidth > 5) %>%
 ggplot(aes(x = HeadCapsuleWidth, y = WanderWeight)) +
   geom_jitter(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "lm") +
   xlab("Head Capsule Width (mm)") +
   ylab("Weight at wandering (g)")
+
+d1 = head_cap_wander %>%
+  filter(is.na(Parasitized)) %>%
+  filter(HeadCapsuleWidth > 5)
+
+lm_test = lm(WanderWeight ~ HeadCapsuleWidth, data = d1)
 
 lm_head_cap = lm(WanderWeight ~ HeadCapsuleWidth, data = head_cap_wander %>%
                    filter(is.na(Parasitized)))
