@@ -223,7 +223,7 @@ test3 = tach_master_cal %>%
 #Recreating Figure 3, but with energy
 #The data in another structure that might be useful later on
 tach_master_sib_cal = tach_master_impute %>%
-  select(UniqueFlyID, Sex, FlyWeight, HeadWeight, ThoraxWeight, AbWeight, sib_number) %>%
+  select(UniqueFlyID, Sex, FlyWeight, HeadWeight, ThoraxWeight, AbWeight, sib_number, CaterpillarID) %>%
   mutate(head_cal = (HeadWeight*lm_head_summ[[2]]),
          thorax_cal = ThoraxWeight*lm_thorax_summ[[2]], 
          ab_cal = AbWeight*lm_ab_summ[[2]], 
@@ -272,7 +272,7 @@ tach_master_percent = tach_master_sib_cal %>%
   mutate(percent_head = head_cal/total_cal,
          percent_thorax = thorax_cal/total_cal,
          percent_ab = ab_cal/total_cal) %>%
-  select(Sex, FlyWeight, percent_head, percent_thorax, percent_ab) %>%
+  select(Sex, FlyWeight, percent_head, percent_thorax, percent_ab, CaterpillarID) %>%
   gather(value = percent, key = segment, percent_head:percent_ab)
 
 p1 = tach_master_percent %>%
@@ -366,3 +366,51 @@ weights
 plot(density(weights))
 
 shapiro.test(weights)
+
+
+tach_master_impute
+
+ggplot(tach_master_impute, aes(x = AbWeight/FlyWeight, fill = Sex)) +
+  geom_density() +
+  theme_classic()
+
+
+
+test = tach_master_cal %>%
+  mutate(total_cal = head_cal + thorax_cal + ab_cal,
+         rel_head_cal = head_cal/total_cal,
+         rel_thorax_cal = thorax_cal/total_cal,
+         rel_abdomen_cal = ab_cal/total_cal)
+
+lmhead = lm(rel_head_cal ~ rel_thorax_cal, data = test)
+lmhead2 = lm(rel_head_cal ~ rel_abdomen_cal, data = test)
+  
+ggplot(tach_master_impute, aes(x = FlyWeight)) +
+  geom_histogram(binwidth = 0.5) +
+  theme_classic() +
+  facet_wrap(~ CaterpillarID)
+
+f1 = ggplot(tach_master_impute, aes(x = FlyWeight, y = sib_number)) +
+  geom_label(size = 3, alpha = 0.6, aes(label = CaterpillarID)) +
+  theme_classic(base_size = 20)
+
+p1 = p1 + geom_vline(xintercept = 10, lty = 2)
+f1 = f1 + geom_vline(xintercept = 10, lty = 2)
+hist = hist + geom_vline(xintercept = 10, lty = 2)
+
+ggarrange(p1, f1, hist, nrow = 3, align = "h", legend = "none")
+
+tach_master_impute %>%
+  group_by(CaterpillarID, sib_number) %>%
+  summarize(mean_weight = mean(FlyWeight, na.rm = TRUE)) %>%
+  ggplot(aes(x = mean_weight, y = sib_number)) +
+  geom_point(size = 3) +
+  theme_classic() +
+  geom_vline(xintercept = 8.5) +
+  geom_jitter(data = tach_master_impute, aes(x = FlyWeight, y = sib_number), alpha = 0.2)
+
+
+ggplot(tach_master_percent, aes(x = FlyWeight, y = percent, color = segment)) +
+  geom_point(aes(shape = Sex)) +
+  theme_classic() +
+  facet_wrap(~ CaterpillarID)
