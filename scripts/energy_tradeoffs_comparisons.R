@@ -16,9 +16,15 @@ lm_ab_summ
 
 #Cleaning up the strings
 tach_master_impute_long$organ = str_replace(tach_master_impute_long$organ, "Weight", "")
+tach_master_long$organ = str_replace(tach_master_long$organ, "Weight", "")
 
 #Calculating the calories per segement weight
 tach_master_impute_long = tach_master_impute_long %>%
+  mutate(calories = ifelse(organ == "Head", organ_weight*lm_head_summ[[2]],
+                           ifelse(organ == "Ab", organ_weight*lm_ab_summ[[2]],
+                                  ifelse(organ == "Thorax", organ_weight*lm_thorax_summ[[2]], NA))))
+
+tach_master_long = tach_master_long %>%
   mutate(calories = ifelse(organ == "Head", organ_weight*lm_head_summ[[2]],
                            ifelse(organ == "Ab", organ_weight*lm_ab_summ[[2]],
                                   ifelse(organ == "Thorax", organ_weight*lm_thorax_summ[[2]], NA))))
@@ -27,6 +33,9 @@ tach_master_impute_long %>%
   group_by(organ, Sex) %>%
   summarize(mean_calories = mean(calories))
 
+tach_master_long %>%
+  group_by(organ, Sex) %>%
+  summarize(mean_calories = mean(calories, na.rm = TRUE))
 
 #Just a quick plot
 ggplot(tach_master_impute_long, aes(x = log(FlyWeight), y = log(calories), color = Sex, pch = organ)) +
@@ -222,7 +231,7 @@ test3 = tach_master_cal %>%
 
 #Recreating Figure 3, but with energy
 #The data in another structure that might be useful later on
-tach_master_sib_cal = tach_master_impute %>%
+tach_master_sib_cal = tach_master %>%
   select(UniqueFlyID, Sex, FlyWeight, HeadWeight, ThoraxWeight, AbWeight, sib_number, CaterpillarID) %>%
   mutate(head_cal = (HeadWeight*lm_head_summ[[2]]),
          thorax_cal = ThoraxWeight*lm_thorax_summ[[2]], 
@@ -303,7 +312,7 @@ ggplot(aes(x = FlyWeight, y = percent, shape = Sex, color = segment)) +
                        labels = c("Abdomen", "Head", "Thorax"))
   
 g1 = ggarrange(p1, test, nrow = 2, labels = "auto", label.x = 0.65)
-ggsave("./output/Fig10_test.pdf", height = 11, width = 8.5, units = "in")
+ggsave("/Users/KeatonWilson/Documents/Writing/Tachinid Development/Figures/Nature Figures/no_impute/Figure4Panel.pdf", height = 11, width = 8.5, units = "in")
 
 hist = ggplot(tach_master_impute, aes(x = FlyWeight, fill = Sex)) +
   geom_histogram(aes(y = ..density..), position = "dodge", binwidth = 0.75) +
@@ -314,33 +323,44 @@ hist = ggplot(tach_master_impute, aes(x = FlyWeight, fill = Sex)) +
   scale_fill_discrete(name = "Sex", 
                       labels = c("Female", "Male")) 
 
+#Hist without imputations
+hist = ggplot(tach_master, aes(x = FlyWeight, fill = Sex)) +
+  geom_histogram(aes(y = ..density..), position = "dodge", binwidth = 0.75) +
+  geom_density(aes(group = 1), alpha = 0.5) +
+  theme_classic(base_size = 20) + 
+  xlab("Fly Weight (mg)") +
+  ylab("Density") +
+  scale_fill_discrete(name = "Sex", 
+                      labels = c("Female", "Male")) 
+
 ggsave("./output/hist.pdf", hist)
   
 library(diptest)
 library(modes)
 
-weights = tach_master_impute %>%
+#without imputations
+weights = tach_master %>%
   filter(!is.na(FlyWeight)) %>%
-  filter(FlyWeight_imp == "FALSE") %>%
+ # filter(FlyWeight_imp == "FALSE") %>%
   select(FlyWeight) %>%
   pull()
 
-weights2 = tach_master_impute %>%
+weights2 = tach_master %>%
   filter(!is.na(FlyWeight)) %>%
   #filter(FlyWeight_imp == "FALSE") %>%
   select(FlyWeight) %>%
   pull()
 
-weights_male = tach_master_impute %>%
+weights_male = tach_master %>%
   filter(!is.na(FlyWeight)) %>%
-  filter(FlyWeight_imp == "FALSE") %>%
+ # filter(FlyWeight_imp == "FALSE") %>%
   filter(Sex == "M") %>%
   select(FlyWeight) %>%
   pull()
 
-weights_female = tach_master_impute %>%
+weights_female = tach_master %>%
   filter(!is.na(FlyWeight)) %>%
-  filter(FlyWeight_imp == "FALSE") %>%
+ # filter(FlyWeight_imp == "FALSE") %>%
   filter(Sex == "F") %>%
   select(FlyWeight) %>%
   pull()

@@ -8,7 +8,7 @@ library(tidyverse)
 library(car)
 library(ggpubr)
 
-#You will need to make sure tach_master_impute is present in the environment from the cohort_size_host_quality script
+#You will need to make sure tach_master_impute and tach_master are present in the environment from the cohort_size_host_quality script
 glimpse(tach_master_impute)
 
 #Turning the data into a long dataframe
@@ -18,6 +18,13 @@ tach_master_impute_long = tach_master_impute %>%
 tach_master_impute_long$organ = factor(tach_master_impute_long$organ)
 tach_master_impute_long$organ_weight = as.numeric(tach_master_impute_long$organ_weight)
 
+tach_master_long = tach_master %>%
+  gather(key = "organ", value = "organ_weight", HeadWeight:LegsWeight) %>%
+  select(-CaterpillarID, -FlyID, -WanderWeight, -HeadCapsuleWidth, -WanderDate, -Comments, -sib_number, -nut_index)
+tach_master_long$organ = factor(tach_master_long$organ)
+tach_master_long$organ_weight = as.numeric(tach_master_long$organ_weight)
+
+#ALLOMETRY FIGURES
 #The interesting body parts (ab and thorax)
 Fig.3 = tach_master_impute_long %>%
   filter(organ == "ThoraxWeight" | organ == "AbWeight") %>%
@@ -92,11 +99,97 @@ lm_summaries_1 = tach_master_impute_long %>%
   map(~ tidy(.x))
 
 
+#Because it's additive and not interactive, we need to generate predictions ahead of time and bind them to the data frame
+
+Fig_3_df_thorax = tach_master_long %>%
+  filter(organ == "ThoraxWeight")
+
+model_thorax = lm(log(organ_weight) ~ log(FlyWeight) + Sex, data = Fig_3_df_thorax)
+preds_thorax = as.tibble(predict(model_thorax, newdata = Fig_3_df_thorax, interval = "confidence"))
+
+Fig_3_df_thorax = bind_cols(preds_thorax, Fig_3_df_thorax)
+
+Fig_3_df_ab = tach_master_long %>%
+  filter(organ == "AbWeight")
+
+model_ab = lm(log(organ_weight) ~ log(FlyWeight) + Sex, data = Fig_3_df_ab)
+preds_ab = as.tibble(predict(model_ab, newdata = Fig_3_df_ab, interval = "confidence"))
+
+Fig_3_df_ab = bind_cols(preds_ab, Fig_3_df_ab)
+
+
+#The interesting body parts (ab and thorax)
+Fig.3 = ggplot(data = Fig_3_df_thorax, aes(x = log(FlyWeight), y = log(organ_weight), shape = Sex, color = organ)) +
+  geom_point(size = 2, alpha = 0.7, color = "#F8766D") +
+  geom_line(aes(x = log(FlyWeight), y = fit, lty = Sex)) +
+  geom_ribbon(aes(ymax = upr, ymin = lwr), alpha = 0.3, color = NA, fill = "#F8766D") +
+  geom_point(data = Fig_3_df_ab, size = 2, alpha = 0.7, color = "#00BFC4") +
+  geom_line(data = Fig_3_df_ab, aes(y = fit, lty = Sex)) +
+  geom_ribbon(data = Fig_3_df_ab, aes(ymax = upr, ymin = lwr), alpha = 0.3, color = NA, fill = "#00BFC4") +
+  theme_classic(base_size = 20) +
+  geom_abline(slope = 1, intercept = 0, lty = 3) +
+  coord_cartesian(xlim = c(0.5, 3), ylim = c(-3,3)) +
+  scale_color_discrete(guide = FALSE) +
+  scale_shape_discrete(labels = c("Female", "Male")) +
+  scale_linetype_discrete(guide = FALSE) +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 2.2, label = "Thorax",
+                                      size = 9), color = "black") +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 1.5, label = "Abdomen",
+                                      size = 9), color = "black") +
+  ylab("log10 Weight (mg)") +
+  xlab("")
+
+ggsave(Fig.3, file = "./output/Fig.3.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
+
+#The rest
+Fig.4 = tach_master_long %>%
+  filter(organ != "ThoraxWeight" & organ != "AbWeight") %>%
+  ggplot(aes(x = log(FlyWeight), y = log(organ_weight), shape = Sex, color = organ)) +
+  geom_point(size = 2, alpha = 0.5) +
+  geom_smooth(method = "lm", aes(group = organ)) +
+  theme_classic(base_size = 20) +
+  geom_abline(slope = 1, intercept = 0, lty = 3) +
+  coord_cartesian(xlim = c(0.5, 3), ylim = c(-3,3)) +
+  scale_color_discrete(guide = FALSE) +
+  scale_shape_discrete(labels = c("Female", "Male")) +
+  scale_linetype_discrete(guide = FALSE) +
+  ylab("log10 Weight (mg)") +
+  xlab("log10 Body Weight (mg)") +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 0.5, label = "Head", 
+                                      size = 10), color = "black") +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = 0.1, label = "Legs", 
+                                      size = 10), color = "black") +
+  geom_label(show.legend = FALSE, aes(x = 2.95, y = -1.4, label = "Wings", 
+                                      size = 10), color = "black")
+
+#ggsave(Fig.4, file = "./output/Fig.4.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
+Fig_4_paneled = ggarrange(Fig.3, Fig.4, common.legend = TRUE, labels = "auto", nrow = 2)
+ggsave(filename = "/Users/KeatonWilson/Documents/Writing/Tachinid Development/Figures/Nature Figures/no_impute/Supp_fig_1.pdf", plot = Fig_4_paneled, device = "pdf", width = 8, height = 11, units = "in")
+
+#STATS for the two figures above
+#Summary Table of slopes
+lm_summaries_1 = tach_master_long %>%
+  select(-WingIntact) %>%
+  split(.$organ) %>%
+  map(~ lm(log(organ_weight) ~ log(FlyWeight) + Sex, data = .x)) %>%
+  map(summary) %>%
+  map(~ tidy(.x))
+
+lm.thorax = tach_master_long %>%
+  filter(organ == "ThoraxWeight") %>%
+  lm(log(organ_weight) ~ log(FlyWeight) + Sex, data = .)
+
+preds = predict(lm.thorax, interval = "predict")
+
+
 #PLOTS#
 #Making a series of smaller figures that compare relative body weight investment as a function of body size. 
+#Removed imputed values and made plots without all the imputations
 
 #Normalized Head weight as a function of body size
-Fig.5 = ggplot(tach_master_impute, aes(x = FlyWeight, y = HeadWeight/FlyWeight, color = Sex)) +
+Fig.5 = ggplot(tach_master, aes(x = FlyWeight, y = HeadWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm", formula = y ~ poly(x, 2), aes(group = 1), color = "black") +
@@ -105,12 +198,14 @@ Fig.5 = ggplot(tach_master_impute, aes(x = FlyWeight, y = HeadWeight/FlyWeight, 
   theme(text = element_text(size = 10))
 
 #modeling
-lm.0.head = lm(HeadWeight/FlyWeight ~poly(FlyWeight, 2), data = tach_master_impute %>%
+lm.sex.head = lm(HeadWeight/FlyWeight ~ poly(FlyWeight, 2)+Sex, data = tach_master %>%
+                   filter(!is.na(FlyWeight)))
+lm.0.head = lm(HeadWeight/FlyWeight ~poly(FlyWeight, 2), data = tach_master %>%
                  filter(!is.na(FlyWeight)))
 summary(lm.0.head)
 
 #Normalized thorax weight as a function of body-size
-Fig.6 = ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
+Fig.6 = ggplot(tach_master, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm", formula = y ~ poly(x, 2)) +
@@ -121,12 +216,12 @@ Fig.6 = ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight
 
 #Modeling
 
-lm.0.thor = lm(ThoraxWeight/FlyWeight ~poly(FlyWeight, 2) + Sex, data = tach_master_impute %>%
+lm.0.thor = lm(ThoraxWeight/FlyWeight ~poly(FlyWeight, 2) + Sex, data = tach_master %>%
                  filter(!is.na(FlyWeight)))
 summary(lm.0.thor)
 
 #Have to make prediction bands and lines manually because the additive model is best
-tach_master_pred = tach_master_impute %>%
+tach_master_pred = tach_master %>%
   select(Sex, FlyWeight, ThoraxWeight)
 preds = predict(lm.0.thor, tach_master_pred, se.fit = TRUE, interval = "confidence", level = 0.95)
 tach_master_pred$fit = preds[[1]][,1]
@@ -134,7 +229,7 @@ tach_master_pred$lwr = preds[[1]][,2]
 tach_master_pred$upr = preds[[1]][,3]
 
 #Overwriting the first figure with the second
-Fig.6 = ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
+Fig.6 = ggplot(tach_master, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   #geom_smooth(method = "glm", formula = y ~ poly(x, 2)) +
@@ -146,7 +241,7 @@ Fig.6 = ggplot(tach_master_impute, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight
 
 
 #Normalized Abdomen weight as a function of body size
-Fig.7 = ggplot(tach_master_impute, aes(x = FlyWeight, y = AbWeight/FlyWeight, color = Sex)) +
+Fig.7 = ggplot(tach_master, aes(x = FlyWeight, y = AbWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm") +
@@ -156,12 +251,12 @@ Fig.7 = ggplot(tach_master_impute, aes(x = FlyWeight, y = AbWeight/FlyWeight, co
 
 
 #Modeling
-lm.0.ab = lm(AbWeight/FlyWeight ~ FlyWeight + Sex, data = tach_master_impute %>%
+lm.0.ab = lm(AbWeight/FlyWeight ~ FlyWeight + Sex, data = tach_master %>%
                filter(!is.na(FlyWeight)))
 summary(lm.0.ab)
 
 #Normalized wing weight as a function of body size
-Fig.8 = ggplot(subset(tach_master_impute, WingWeight < 0.5), aes(x = FlyWeight, y = WingWeight/FlyWeight, color = Sex)) +
+Fig.8 = ggplot(subset(tach_master, WingWeight < 0.5), aes(x = FlyWeight, y = WingWeight/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm", aes(group = 1), color = "black") +
@@ -172,19 +267,19 @@ Fig.8 = ggplot(subset(tach_master_impute, WingWeight < 0.5), aes(x = FlyWeight, 
 
 
 #modeling
-lm.0.wing = lm(WingWeight/FlyWeight ~ FlyWeight+Sex, data = tach_master_impute %>%
+lm.0.wing = lm(WingWeight/FlyWeight ~ FlyWeight+Sex, data = tach_master %>%
                  filter(!is.na(FlyWeight)))
 summary(lm.0.wing)
 
-lm.0.legs = lm(as.numeric(LegsWeight)/FlyWeight ~ FlyWeight+Sex, data = tach_master_impute %>%
+lm.0.legs = lm(as.numeric(LegsWeight)/FlyWeight ~ FlyWeight+Sex, data = tach_master %>%
                  filter(!is.na(FlyWeight) & !is.na(LegsWeight)))
 summary(lm.0.legs)
 
 #Normalized leg weight as a function of body size
-Fig.9 = ggplot(tach_master_impute, aes(x = FlyWeight, y = as.numeric(LegsWeight)/FlyWeight, color = Sex)) +
+Fig.9 = ggplot(tach_master, aes(x = FlyWeight, y = as.numeric(LegsWeight)/FlyWeight, color = Sex)) +
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
-  geom_smooth(method = "glm", aes(group = 1), color = "black") +
+  geom_smooth(method = "glm") +
   xlab("Fly weight (mg)") +
   ylab("Legs weight (mg) / Body weight (mg)") +
   theme(text = element_text(size = 10))
@@ -192,7 +287,7 @@ Fig.9 = ggplot(tach_master_impute, aes(x = FlyWeight, y = as.numeric(LegsWeight)
 
 #Multipanel plot
 gfinal = ggarrange(Fig.5, Fig.8, Fig.9, Fig.6, Fig.7, common.legend = TRUE, ncol = 2, nrow = 3)
-ggsave(gfinal, file = "./output/Fig6(paneled).pdf", device = "pdf", width = 8.5, height = 8, units = "in")
+ggsave(gfinal, file = "/Users/KeatonWilson/Documents/Writing/Tachinid Development/Figures/Nature Figures/no_impute/Figure3panel.pdf", device = "pdf", width = 8.5, height = 8, units = "in")
 
 
 #Testing out some new stuff

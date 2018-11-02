@@ -6,6 +6,7 @@
 library(tidyverse)
 library(caret)
 library(VIM)
+library(ggpubr)
 
 #Importing the master data file
 tach_master = read_csv(file = "Data/TachDataFull.csv")
@@ -99,7 +100,60 @@ AIC(lm1)
 AIC(lm2)
 AIC(lm3)
 
-#Checking average differences between males and females
+#EVERYTHING IS THE SAME AS ABOVE EXCEPT NO IMPUTATION
+tach_master = tach_master %>%
+  mutate(FlyWeight = as.numeric(FlyWeight))
+
+#Fly weight as a function of sibling number
+Fig.1 = ggplot(tach_master, aes(x = sib_number, y = FlyWeight, color = Sex)) +
+  geom_jitter(size = 4, alpha = 0.7) +
+  theme_classic(base_size = 20) +
+  geom_smooth(method = "lm", aes(group = 1), color = "black") +
+  xlab("Cohort Size") +
+  ylab("Adult Fly Weight (mg)") +
+  scale_color_discrete(labels = c("Female", "Male"))
+
+#ggsave(Fig.1, file = "./output/Fig.1.pdf", device = "pdf", width = 10, height = 8, units = "in")
+
+#Summary table
+tach_master %>%
+  group_by(CaterpillarID) %>%
+  summarize(sib_number = mean(sib_number),
+            avg_fly_weight = mean(FlyWeight, na.rm = TRUE), 
+            n = n()) %>%
+  arrange(desc(sib_number))
+
+#Fly weight as a function of head capsule size
+Fig.2 = ggplot(tach_master, aes(x = HeadCapsuleWidth, y = FlyWeight, color = Sex)) +
+  geom_jitter(size = 4, alpha = 0.7) +
+  theme_classic(base_size = 20) +
+  geom_smooth(method = "lm", aes(group = 1), color = "black") +
+  xlab("Host head-capsule width (mm)") +
+  ylab("Adult Fly Weight (mg)") +
+  scale_color_discrete(labels = c("Female", "Male"))
+
+fig_2_panel = ggarrange(Fig.1, Fig.2, labels = "auto", label.x = 0.85, common.legend = TRUE, nrow = 2)
+
+ggsave(fig_2_panel, file = "/Users/KeatonWilson/Documents/Writing/Tachinid Development/Figures/Nature Figures/no_impute/Fig2Panel.pdf", device = "pdf", width = 8.5, height = 11, units = "in")
+
+#best model seems to be one that includes both cohort size and headcapsule width, additively.
+lm0 = lm(FlyWeight ~ sib_number, data = tach_master)
+lm1 = lm(FlyWeight ~ sib_number + HeadCapsuleWidth, data = tach_master)
+lm2 = lm(FlyWeight ~ sib_number*HeadCapsuleWidth, data = tach_master)
+lm3 = lm(FlyWeight ~ sib_number*HeadCapsuleWidth*Sex, data = tach_master)
+
+summary(lm0)
+summary(lm1)
+summary(lm2)
+summary(lm3)
+
+AIC(lm0)
+AIC(lm1)
+AIC(lm2)
+AIC(lm3)
+
+
+#Checking average differences between males and females #IMPUTED
 tach_master_impute %>%
   group_by(Sex) %>%
   summarize(avg_weight = mean(FlyWeight, na.rm = TRUE),
@@ -107,6 +161,16 @@ tach_master_impute %>%
             n = n())
 
 lm.sex = lm(FlyWeight ~ Sex, data = tach_master_impute)
+summary(lm.sex)
+
+#Checking average differences between males and females #NON-IMPUTED
+tach_master %>%
+  group_by(Sex) %>%
+  summarize(avg_weight = mean(FlyWeight, na.rm = TRUE),
+            sd = sd(FlyWeight, na.rm = TRUE),
+            n = n())
+
+lm.sex = lm(FlyWeight ~ Sex, data = tach_master)
 summary(lm.sex)
 
 tach_master_impute %>%
@@ -148,3 +212,11 @@ summary(lm_head_cap)
 #Not great - but there are a lot of other variables embedded in that - perhaps it's better to use other examples from the literature.
 
 
+old_data_size = tibble(CaterpillarID = c(3, 6, 7, 14, 18, 19, 23, 24, 25, 26, 34, 37, 38, 40), sib_number = c(13, 8, 47, 50, 12, 5, 30, 17, 26, 31, 30, 22, 30, 35))
+
+cohort_size = bind_rows(old_data_size, siblings)
+
+ggplot(cohort_size, aes(x = sib_number)) +
+  geom_histogram(binwidth = 5, aes(y = ..density..)) +
+  geom_density() +
+  theme_classic()
