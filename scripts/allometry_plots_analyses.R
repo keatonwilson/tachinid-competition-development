@@ -193,7 +193,7 @@ Fig.5 = ggplot(tach_master, aes(x = FlyWeight, y = HeadWeight/FlyWeight, color =
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm", formula = y ~ poly(x, 2), aes(group = 1), color = "black") +
-  xlab("Fly weight (mg)") +
+  xlab("Body weight (mg)") +
   ylab("Head weight (mg) / Body weight (mg)") +
   theme(text = element_text(size = 10))
 
@@ -209,7 +209,7 @@ Fig.6 = ggplot(tach_master, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm", formula = y ~ poly(x, 2)) +
-  xlab("Fly weight (mg)") +
+  xlab("Body weight (mg)") +
   ylab("Thorax weight (mg) / Body weight (mg)") +
   theme(text = element_text(size = 10))
 
@@ -235,7 +235,7 @@ Fig.6 = ggplot(tach_master, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color
   #geom_smooth(method = "glm", formula = y ~ poly(x, 2)) +
   geom_line(data = tach_master_pred, aes(y = fit)) +
   geom_ribbon(data = tach_master_pred, aes(ymin = lwr, ymax = upr, group = Sex), alpha = 0.2, color = NA) +
-  xlab("Fly weight (mg)") +
+  xlab("Body weight (mg)") +
   ylab("Thorax weight (mg) / Body weight (mg)") +
   theme(text = element_text(size = 10))
 
@@ -245,7 +245,7 @@ Fig.7 = ggplot(tach_master, aes(x = FlyWeight, y = AbWeight/FlyWeight, color = S
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm") +
-  xlab("Fly weight (mg)") +
+  xlab("Body weight (mg)") +
   ylab("Abdomen weight (mg) / Body weight (mg)") +
   theme(text = element_text(size = 10))
 
@@ -260,7 +260,7 @@ Fig.8 = ggplot(subset(tach_master, WingWeight < 0.5), aes(x = FlyWeight, y = Win
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm", aes(group = 1), color = "black") +
-  xlab("Fly weight (mg)") +
+  xlab("Body weight (mg)") +
   ylab("Wings weight (mg) / Body weight (mg)") +
   theme(text = element_text(size = 10))
 
@@ -280,7 +280,7 @@ Fig.9 = ggplot(tach_master, aes(x = FlyWeight, y = as.numeric(LegsWeight)/FlyWei
   geom_point(size = 3, alpha = 0.6) +
   theme_classic() +
   geom_smooth(method = "glm") +
-  xlab("Fly weight (mg)") +
+  xlab("Body weight (mg)") +
   ylab("Legs weight (mg) / Body weight (mg)") +
   theme(text = element_text(size = 10))
 

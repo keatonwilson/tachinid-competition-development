@@ -195,6 +195,21 @@ test = ggExtra::ggMarginal(test, type = "density", groupColour = TRUE, groupFill
 
 ggsave(test, "./output/Fig10a.eps", width = 10, height = 8, units = "in", device = "eps")
 
+#Same plot as above but without size differences
+test = tach_master_cal %>%
+  mutate(total_cal = head_cal + thorax_cal + ab_cal) %>%
+  ggplot(aes(x = thorax_cal/total_cal, y = ab_cal/total_cal, color = Sex, group = Sex)) +
+  geom_point(alpha = 0.7, size = 3) +
+  theme_classic(base_size = 20) +
+  scale_size_continuous("Fly Weight (mg)", range = c(2,7)) +
+  scale_color_discrete(labels = c("Female", "Male")) +
+  xlab("Normalized Thorax Calories") +
+  ylab("Normalized Abdomen Calories")
+
+test = ggExtra::ggMarginal(test, type = "density", groupColour = TRUE, groupFill = TRUE)
+
+ggsave(test, filename = "/Users/KeatonWilson/Desktop/talk_figure.jpg", device = "jpeg", width = 10, height = 8)
+
 #stats
 stats_data = tach_master_cal %>%
   mutate(total_cal = head_cal + thorax_cal + ab_cal,
@@ -313,6 +328,37 @@ ggplot(aes(x = FlyWeight, y = percent, shape = Sex, color = segment)) +
   
 g1 = ggarrange(p1, test, nrow = 2, labels = "auto", label.x = 0.65)
 ggsave("/Users/KeatonWilson/Documents/Writing/Tachinid Development/Figures/Nature Figures/no_impute/Figure4Panel.pdf", height = 11, width = 8.5, units = "in")
+
+#p1 recoded for talk
+p2 = tach_master_percent %>%
+  ggplot(aes(x = FlyWeight, y = percent, color = Sex)) +
+  geom_point(aes(shape = segment), size = 3, alpha = 0.8) +
+  geom_smooth(data = tach_master_percent %>%
+                filter(segment == "percent_thorax"),
+              method = "lm",
+              formula = y ~ poly(x, 2),
+              aes(lty = Sex)) +
+  geom_smooth(data = tach_master_percent %>%
+                filter(segment == "percent_head"),
+              aes(group = 1),
+              method = "lm") +
+  geom_smooth(data = tach_master_percent %>%
+                filter(segment == "percent_ab"),
+              method = "lm",
+              formula = y ~ poly(x, 2),
+              aes(lty = Sex)) +
+  theme_classic(base_size = 20) +
+  xlab("Fly Weight (mg)") +
+  ylab("Percent Calories") +
+  scale_shape_discrete(name = "Body Segment",
+                       labels = c("Abdomen", "Head", "Thorax")) +
+  xlim(c(0,16)) +
+  annotate("label", x = 1, y = 0.58, label = "Thorax", size = 6)+
+  annotate("label", x = 1, y = 0.30, label = "Abdomen", size = 6) +
+  annotate("label", x = 1, y = 0.1, label = "Head", size = 6)
+
+ggsave(filename = "/Users/KeatonWilson/Desktop/talk_fig_2.jpg", device = "jpeg", width = 11.5, height = 8)
+
 
 hist = ggplot(tach_master_impute, aes(x = FlyWeight, fill = Sex)) +
   geom_histogram(aes(y = ..density..), position = "dodge", binwidth = 0.75) +

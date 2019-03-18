@@ -7,6 +7,7 @@ library(tidyverse)
 library(caret)
 library(VIM)
 library(ggpubr)
+library(car)
 
 #Importing the master data file
 tach_master = read_csv(file = "Data/TachDataFull.csv")
@@ -152,6 +153,18 @@ AIC(lm1)
 AIC(lm2)
 AIC(lm3)
 
+#Residual plot
+tach_master_no_na = tach_master %>%
+  filter(!is.na(FlyWeight) & !is.na(HeadCapsuleWidth))
+
+lm_resid = lm(FlyWeight ~ HeadCapsuleWidth, data = tach_master_no_na)
+
+tach_master_no_na %>%
+  mutate(resid = residuals(lm_resid)) %>%
+  ggplot(aes(x = resid, y = FlyWeight)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_classic()
 
 #Checking average differences between males and females #IMPUTED
 tach_master_impute %>%
