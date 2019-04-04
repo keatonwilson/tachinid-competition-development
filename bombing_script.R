@@ -89,3 +89,16 @@ cal_master %>%
   ggplot(aes(x = hc_width, y = total_cal)) +
   geom_point() +
   theme_classic()
+
+#Just a brief power analysis
+library(pwr)
+
+#F2 is the effect size here. Cohen suggests f2 values of 0.02, 0.15, and 0.35 represent small, medium, and large effect sizes.
+#u = numerator df
+#v = denominator df
+# u = number of predictors - 1
+# v = n - p
+
+pwr.f2.test(u = 1, v = , f2 = 0.15, sig.level = 0.05, power = 0.80)
+
+#The .80 here represents a false negative rate of 20%. I.e. there is an 80% chance of seeing the presupposed effect calculated here. It looks like we need a sample size of around 50. We have around 13. 
