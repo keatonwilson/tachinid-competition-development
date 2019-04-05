@@ -57,6 +57,8 @@ ggplot(gut_bomb_clean, aes(x = frozen_weight, y = hc_width)) +
   geom_point() +
   theme_classic()
 
+lm_test = lm(hc_width ~ frozen_weight, data = gut_bomb_clean)
+
 gut_bomb_clean = gut_bomb_clean %>%
 mutate(sample_id = as.factor(str_replace(gut_bomb_clean$sample_id, "\\(.*\\)", "")))
 
@@ -77,6 +79,8 @@ ggplot(cal_master, aes(x = skin_cal, y = gut_cal)) +
   theme_classic()
 
 lm_4 = lm(frozen_weight ~ hc_width, data = cal_master)
+cal_master %>%
+  drop_na()
 
 cal_master %>%
 ggplot(aes(x = hc_width, y = gut_cal)) +
@@ -89,6 +93,19 @@ cal_master %>%
   ggplot(aes(x = hc_width, y = total_cal)) +
   geom_point() +
   theme_classic()
+
+ggplot(cal_master, aes(x = frozen_weight, y = gut_cal)) +
+  geom_point() +
+  theme_classic()
+
+ggplot(cal_master, aes(x = frozen_weight, y = hc_width)) +
+  geom_point() +
+  theme_classic()
+
+summary(lm(hc_width ~ frozen_weight, data = cal_master))
+
+cal_master
+#Look at hc_width vs. frozen_weight data - two points with high weights but low widths
 
 #Just a brief power analysis
 library(pwr)

@@ -233,3 +233,15 @@ ggplot(cohort_size, aes(x = sib_number)) +
   geom_histogram(binwidth = 5, aes(y = ..density..)) +
   geom_density() +
   theme_classic()
+
+#Trying stuff out
+tach_master
+
+ggplot(tach_master, aes(x = WanderWeight, y = FlyWeight, color = Sex)) +
+  geom_point() +
+  theme_classic() 
+ggplot(tach_master, aes(y = HeadCapsuleWidth, x = WanderWeight)) +
+  geom_point() +
+  theme_classic()
+
+summary(lm(HeadCapsuleWidth ~ WanderWeight, data = tach_master))
