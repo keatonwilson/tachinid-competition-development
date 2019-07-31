@@ -8,6 +8,8 @@ library(caret)
 library(VIM)
 library(ggpubr)
 library(car)
+library(nlme)
+library(lme4)
 
 #Importing the master data file
 tach_master = read_csv(file = "Data/TachDataFull.csv")
@@ -109,7 +111,6 @@ tach_master = tach_master %>%
 Fig.1 = ggplot(tach_master, aes(x = sib_number, y = FlyWeight, color = Sex)) +
   geom_jitter(size = 4, alpha = 0.7) +
   theme_classic(base_size = 20) +
-  geom_smooth(method = "lm", aes(group = 1), color = "black") +
   xlab("Cohort Size") +
   ylab("Adult Fly Weight (mg)") +
   scale_color_discrete(labels = c("Female", "Male"))
@@ -152,6 +153,42 @@ AIC(lm0)
 AIC(lm1)
 AIC(lm2)
 AIC(lm3)
+
+#Can we do this in an lme context?
+library(lme4)
+library(car)
+library(MASS)
+library(lmerTest)
+
+lme_1 =  lmer(FlyWeight ~ sib_number + HeadCapsuleWidth + (1|CaterpillarID), data = tach_master)
+
+#Random slopes and intercepts - this model is actually better based on AIC
+lme_1 = lme(FlyWeight ~ sib_number + HeadCapsuleWidth, 
+            data = tach_master,
+          random = ~1|CaterpillarID, na.action = na.omit)
+summary(lme_1)
+summary(lme_1)
+anova(lme_1, type = 2)
+
+install.packages('effects')
+library(effects)
+newdat <- expand.grid(sib_number=c(min(tach_master$sib_number),
+                                   max(tach_master$sib_number)),
+                      HeadCapsuleWidth=c(min(tach_master$HeadCapsuleWidth),
+                                         max(tach_master$HeadCapsuleWidth)))
+plot(predictorEffect("sib_number", lme_1))
+plot(predictorEffect("HeadCapsuleWidth", lme_1))
+
+
+pred1df = data.frame(pred = predictorEffect("sib_number", lme_1))
+
+tach_master %>%
+  dplyr::select(CaterpillarID, Sex, HeadCapsuleWidth, FlyWeight, sib_number) %>%
+  drop_na() %>%
+ggplot(aes(x=sib_number, y=FlyWeight)) +
+  geom_jitter(aes(color = Sex)) +
+  geom_line(data = pred1df, aes(x = pred.sib_number, y = pred.fit)) +
+  geom_ribbon(data = pred1df, aes(x = pred.sib_number, ymin = pred.lower, ymax = pred.upper))
 
 #Residual plot
 tach_master_no_na = tach_master %>%
@@ -244,4 +281,11 @@ ggplot(tach_master, aes(y = HeadCapsuleWidth, x = WanderWeight)) +
   geom_point() +
   theme_classic()
 
-summary(lm(HeadCapsuleWidth ~ WanderWeight, data = tach_master))
+summary(lm(WanderWeight ~ HeadCapsuleWidth, data = tach_master))
+
+tach_lm = tach_master %>%
+  select(WanderWeight, HeadCapsuleWidth) %>%
+  drop_na() %>%
+  distinct() 
+
+summary(lm(HeadCapsuleWidth ~ WanderWeight, data = tach_lm))

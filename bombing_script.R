@@ -119,3 +119,6 @@ library(pwr)
 pwr.f2.test(u = 1, v = , f2 = 0.15, sig.level = 0.05, power = 0.80)
 
 #The .80 here represents a false negative rate of 20%. I.e. there is an 80% chance of seeing the presupposed effect calculated here. It looks like we need a sample size of around 50. We have around 13. 
+#
+
+summary(lm(gut_cal ~ frozen_weight, data = cal_master))
