@@ -218,6 +218,7 @@ tach_master %>%
   group_by(Sex) %>%
   summarize(avg_weight = mean(FlyWeight, na.rm = TRUE),
             sd = sd(FlyWeight, na.rm = TRUE),
+            ci = confint(FlyWeight, na.rm = TRUE),
             n = n())
 
 lm.sex = lm(FlyWeight ~ Sex, data = tach_master)

@@ -105,3 +105,46 @@ Fig.1b = tach_master_no_na %>%
 fig_2_panel = ggarrange(Fig.1a, Fig.1b, labels = "auto", label.x = 0.85, common.legend = TRUE, nrow = 2)
 
 ggsave(fig_2_panel, file = "/Users/KeatonWilson/Documents/Writing/Tachinid Development/Figures/Nature Figures/no_impute/Fig2Panel_V2.pdf", device = "pdf", width = 8.5, height = 11, units = "in")
+
+ggsave(fig_2_panel, file = "./output/Fig2Panel_V2.pdf", device = "pdf", width = 8.5, height = 11, units = "in")
+
+
+#Model Testing
+lme_1 = lme(FlyWeight ~ sib_number, 
+            random=(~1|CaterpillarID), data = tach_master_no_na)
+
+lme_2 = lme(FlyWeight ~ sib_number + HeadCapsuleWidth, 
+            random=(~1|CaterpillarID), data = tach_master_no_na)
+
+lme_3 = lme(FlyWeight ~ sib_number*HeadCapsuleWidth, 
+            random=(~1|CaterpillarID), data = tach_master_no_na)
+
+lme_4 = lme(FlyWeight ~ sib_number*HeadCapsuleWidth*Sex, 
+            random=(~1|CaterpillarID), data = tach_master_no_na)
+
+anova(lme_1)
+summary(lme_1)
+rsquared(lme_1)
+AIC(lme_1)
+
+anova(lme_2)
+summary(lme_2)
+rsquared(lme_2)
+AIC(lme_2)
+
+anova(lme_3)
+summary(lme_3)
+rsquared(lme_3)
+AIC(lme_3)
+
+anova(lme_4)
+summary(lme_4)
+rsquared(lme_4)
+AIC(lme_4)
+
+#Summary statistics
+std <- function(x) sd(x)/sqrt(length(x))
+tach_master %>%
+  group_by(Sex) %>%
+  summarize(mean = mean(FlyWeight, na.rm = TRUE), 
+            se = std.error(FlyWeight, na.rm = TRUE))
