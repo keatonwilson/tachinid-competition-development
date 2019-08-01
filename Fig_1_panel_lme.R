@@ -127,7 +127,7 @@ summary(lme_1)
 rsquared(lme_1)
 AIC(lme_1)
 
-anova(lme_2)
+anova(lme_2, type = "2")
 summary(lme_2)
 rsquared(lme_2)
 AIC(lme_2)
