@@ -78,7 +78,7 @@ Fig.1a = tach_master_no_na %>%
   mutate(pred = predict(lm1_2, level = 0),
          fitted = fitted(lm1_2, level = 0)) %>%
   ggplot(aes(x = sib_number, y = FlyWeight)) +
-  geom_point(aes(color = Sex), size = 2) +
+  geom_jitter(aes(color = Sex), size = 2.5) +
   geom_point(aes(y = pred), size = 3) +
   geom_line(data = pe_sib_line, aes(x = sib_number, y = y)) +
   geom_ribbon(data = pe_sib_line, aes(x = sib_number, ymin = ymin, ymax = ymax, y = y), 
@@ -92,7 +92,7 @@ Fig.1b = tach_master_no_na %>%
   mutate(pred = predict(lm1_2, level = 0),
          fitted = fitted(lm1_2, level = 0)) %>%
   ggplot(aes(x = HeadCapsuleWidth, y = FlyWeight)) +
-  geom_point(aes(color = Sex), size = 2) +
+  geom_jitter(aes(color = Sex), size = 2.5) +
   geom_point(aes(y = pred), size = 3) +
   geom_line(data = pe_headcap_line, aes(x = HeadCapsuleWidth, y = y)) +
   geom_ribbon(data = pe_headcap_line, aes(x = HeadCapsuleWidth, ymin = ymin, ymax = ymax, y = y), 
@@ -104,7 +104,7 @@ Fig.1b = tach_master_no_na %>%
 
 fig_2_panel = ggarrange(Fig.1a, Fig.1b, labels = "auto", label.x = 0.85, common.legend = TRUE, nrow = 2)
 
-ggsave(fig_2_panel, file = "/Users/KeatonWilson/Documents/Writing/Tachinid Development/Figures/Nature Figures/no_impute/Fig2Panel_V2.pdf", device = "pdf", width = 8.5, height = 11, units = "in")
+ggsave(fig_2_panel, file = "/Users/KeatonWilson/Documents/Writing/Tachinid Development/peerJ_figs/fig_1.pdf", device = "pdf", width = 8.5, height = 11, units = "in")
 
 ggsave(fig_2_panel, file = "./output/Fig2Panel_V2.pdf", device = "pdf", width = 8.5, height = 11, units = "in")
 
