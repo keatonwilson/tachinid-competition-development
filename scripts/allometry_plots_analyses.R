@@ -14,13 +14,13 @@ glimpse(tach_master_impute)
 #Turning the data into a long dataframe
 tach_master_impute_long = tach_master_impute %>%
   gather(key = "organ", value = "organ_weight", HeadWeight:LegsWeight) %>%
-  select(-CaterpillarID, -FlyID, -WanderWeight, -HeadCapsuleWidth, -WanderDate, -Comments, -sib_number, -nut_index)
+  dplyr::select(-CaterpillarID, -FlyID, -WanderWeight, -HeadCapsuleWidth, -WanderDate, -Comments, -sib_number, -nut_index)
 tach_master_impute_long$organ = factor(tach_master_impute_long$organ)
 tach_master_impute_long$organ_weight = as.numeric(tach_master_impute_long$organ_weight)
 
 tach_master_long = tach_master %>%
   gather(key = "organ", value = "organ_weight", HeadWeight:LegsWeight) %>%
-  select(-CaterpillarID, -FlyID, -WanderWeight, -HeadCapsuleWidth, -WanderDate, -Comments, -sib_number, -nut_index)
+  dplyr::select(-CaterpillarID, -FlyID, -WanderWeight, -HeadCapsuleWidth, -WanderDate, -Comments, -sib_number, -nut_index)
 tach_master_long$organ = factor(tach_master_long$organ)
 tach_master_long$organ_weight = as.numeric(tach_master_long$organ_weight)
 
@@ -200,9 +200,17 @@ Fig.5 = ggplot(tach_master, aes(x = FlyWeight, y = HeadWeight/FlyWeight, color =
 #modeling
 lm.sex.head = lm(HeadWeight/FlyWeight ~ poly(FlyWeight, 2)+Sex, data = tach_master %>%
                    filter(!is.na(FlyWeight)))
-lm.0.head = lm(HeadWeight/FlyWeight ~poly(FlyWeight, 2), data = tach_master %>%
+lm.0.head = lm(HeadWeight/FlyWeight ~FlyWeight, data = tach_master %>%
                  filter(!is.na(FlyWeight)))
+lm.final.head = lm(HeadWeight/FlyWeight ~poly(FlyWeight, 2), data = tach_master %>%
+                     filter(!is.na(FlyWeight)))
+
 summary(lm.0.head)
+AIC(lm.0.head)
+summary(lm.sex.head)
+AIC(lm.sex.head)
+summary(lm.final.head)
+AIC(lm.final.head)
 
 #Normalized thorax weight as a function of body-size
 Fig.6 = ggplot(tach_master, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color = Sex)) +
@@ -215,10 +223,16 @@ Fig.6 = ggplot(tach_master, aes(x = FlyWeight, y = ThoraxWeight/FlyWeight, color
 
 
 #Modeling
+lm.0.thor = lm(ThoraxWeight/FlyWeight ~FlyWeight, data = tach_master %>%
+                 filter(!is.na(FlyWeight)))
+lm.1.thor = lm(ThoraxWeight/FlyWeight ~poly(FlyWeight, 2), data = tach_master %>%
+                 filter(!is.na(FlyWeight)))
 
-lm.0.thor = lm(ThoraxWeight/FlyWeight ~poly(FlyWeight, 2) + Sex, data = tach_master %>%
+lm.final.thor = lm(ThoraxWeight/FlyWeight ~poly(FlyWeight, 2) + Sex, data = tach_master %>%
                  filter(!is.na(FlyWeight)))
 summary(lm.0.thor)
+AIC(lm.0.thor)
+summary(lm.final.thor)
 
 #Have to make prediction bands and lines manually because the additive model is best
 tach_master_pred = tach_master %>%
@@ -251,9 +265,13 @@ Fig.7 = ggplot(tach_master, aes(x = FlyWeight, y = AbWeight/FlyWeight, color = S
 
 
 #Modeling
-lm.0.ab = lm(AbWeight/FlyWeight ~ FlyWeight + Sex, data = tach_master %>%
+lm.0.ab = lm(AbWeight/FlyWeight ~ FlyWeight, data = tach_master %>%
                filter(!is.na(FlyWeight)))
-summary(lm.0.ab)
+lm.1.ab = lm(AbWeight/FlyWeight ~ FlyWeight + Sex, data = tach_master %>%
+               filter(!is.na(FlyWeight)))
+lm.2.ab = lm(AbWeight/FlyWeight ~ FlyWeight*Sex, data = tach_master %>%
+               filter(!is.na(FlyWeight)))
+summary(lm.2.ab)
 
 #Normalized wing weight as a function of body size
 Fig.8 = ggplot(subset(tach_master, WingWeight < 0.5), aes(x = FlyWeight, y = WingWeight/FlyWeight, color = Sex)) +
@@ -269,11 +287,20 @@ Fig.8 = ggplot(subset(tach_master, WingWeight < 0.5), aes(x = FlyWeight, y = Win
 #modeling
 lm.0.wing = lm(WingWeight/FlyWeight ~ FlyWeight+Sex, data = tach_master %>%
                  filter(!is.na(FlyWeight)))
+lm.1.wing = lm(WingWeight/FlyWeight ~ FlyWeight, data = tach_master %>%
+                 filter(!is.na(FlyWeight)))
 summary(lm.0.wing)
 
-lm.0.legs = lm(as.numeric(LegsWeight)/FlyWeight ~ FlyWeight+Sex, data = tach_master %>%
+lm.0.legs = lm(as.numeric(LegsWeight)/FlyWeight ~ FlyWeight, data = tach_master %>%
                  filter(!is.na(FlyWeight) & !is.na(LegsWeight)))
 summary(lm.0.legs)
+lm.1.legs = lm(as.numeric(LegsWeight)/FlyWeight ~ FlyWeight+Sex, data = tach_master %>%
+                 filter(!is.na(FlyWeight) & !is.na(LegsWeight)))
+
+lm.2.legs = lm(as.numeric(LegsWeight)/FlyWeight ~ FlyWeight*Sex, data = tach_master %>%
+                 filter(!is.na(FlyWeight) & !is.na(LegsWeight)))
+
+summary(lm.2.legs)
 
 #Normalized leg weight as a function of body size
 Fig.9 = ggplot(tach_master, aes(x = FlyWeight, y = as.numeric(LegsWeight)/FlyWeight, color = Sex)) +

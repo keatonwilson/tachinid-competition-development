@@ -290,3 +290,23 @@ tach_lm = tach_master %>%
   distinct() 
 
 summary(lm(HeadCapsuleWidth ~ WanderWeight, data = tach_lm))
+
+# Reviewer ask about condensing and simplifying to average of each group
+
+summarized = tach_master %>%
+  group_by(CaterpillarID) %>%
+  summarize(mean_cohort_weight = mean(FlyWeight, na.rm = TRUE)) %>%
+  left_join(tach_master %>%
+              select(CaterpillarID, HeadCapsuleWidth, sib_number)) %>%
+  distinct()
+
+lm_small = lm(mean_cohort_weight ~ sib_number + HeadCapsuleWidth, data = summarized)
+ggplot(summarized, aes(x = sib_number, y = mean_cohort_weight)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_classic()
+
+ggplot(summarized, aes(x = HeadCapsuleWidth, y = mean_cohort_weight)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_classic()
